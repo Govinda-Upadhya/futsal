@@ -1,5 +1,46 @@
 import { Admin, Ground } from "../../db.js";
 import { toMinutes } from "../../lib.js";
+import {
+  AWS_ACCESS_KEY,
+  AWS_BUCKET_NAME,
+  AWS_REGION,
+  AWS_SECRET_KEY,
+  JWT_SECRET,
+} from "../../config.js";
+
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+const s3 = new S3Client({
+  region: AWS_REGION,
+  credentials: {
+    accessKeyId: AWS_ACCESS_KEY,
+    secretAccessKey: AWS_SECRET_KEY,
+  },
+});
+
+export const groundPics = async (req, res) => {
+  const { fileName, fileType } = req.body;
+  const key = `groundpics/${Date.now()}-${fileName}`;
+  const imageUrl = `https://${AWS_BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com/${key}`;
+
+  const command = new PutObjectCommand({
+    Bucket: AWS_BUCKET_NAME,
+    Key: key,
+    ContentType: fileType,
+  });
+
+  try {
+    const url = await getSignedUrl(s3, command, { expiresIn: 180 });
+    return res.json({ url, imageUrl });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not generate presigned URL" });
+  }
+};
 
 export const createGround = async (req, res) => {
   const { name, image, address, availability, description } = req.body;
@@ -22,6 +63,23 @@ export const createGround = async (req, res) => {
       const end = time.end.trim();
 
       if (toMinutes(start) > toMinutes(end)) {
+        for (const photo of image) {
+          const url = new URL(photo);
+          const key = url.pathname.substring(1);
+          console.log(key);
+
+          const params = {
+            Bucket: "futsal-pics",
+            Key: key,
+          };
+          try {
+            const command = new DeleteObjectCommand(params);
+            const response = await s3.send(command);
+            console.log("Deleted successfully:", response);
+          } catch (err) {
+            console.error("Error deleting object:", err);
+          }
+        }
         return res.status(400).send(`Invalid time range: ${start} - ${end}`);
       }
     }
@@ -61,15 +119,58 @@ export const deleteGround = async (req, res) => {
 
 export const updateGround = async (req, res) => {
   const groundId = req.params.id;
-  const { name, image, address, availability, description } = req.body;
+  const {
+    name,
+    address,
+    availability,
+    description,
+    images,
+    removedImages,
+    newImageUrls,
+  } = req.body;
 
   try {
     const groundExists = await Ground.findById(groundId);
     if (!groundExists) {
+      for (const photo of newImageUrls) {
+        const url = new URL(photo);
+        const key = url.pathname.substring(1);
+        console.log(key);
+
+        const params = {
+          Bucket: "futsal-pics",
+          Key: key,
+        };
+        try {
+          const command = new DeleteObjectCommand(params);
+          const response = await s3.send(command);
+          console.log("Deleted successfully:", response);
+        } catch (err) {
+          console.error("Error deleting object:", err);
+        }
+      }
+
       return res.send("the ground doesnt exists");
     }
     for (const time of availability) {
       if (!time.start || !time.end) {
+        for (const photo of newImageUrls) {
+          const url = new URL(photo);
+          const key = url.pathname.substring(1);
+          console.log(key);
+
+          const params = {
+            Bucket: "futsal-pics",
+            Key: key,
+          };
+          try {
+            const command = new DeleteObjectCommand(params);
+            const response = await s3.send(command);
+            console.log("Deleted successfully:", response);
+          } catch (err) {
+            console.error("Error deleting object:", err);
+          }
+        }
         return res.status(400).send("Start and end times are required");
       }
 
@@ -77,16 +178,72 @@ export const updateGround = async (req, res) => {
       const end = time.end.trim();
 
       if (toMinutes(start) > toMinutes(end)) {
+        for (const photo of newImageUrls) {
+          const url = new URL(photo);
+          const key = url.pathname.substring(1);
+          console.log(key);
+
+          const params = {
+            Bucket: "futsal-pics",
+            Key: key,
+          };
+          try {
+            const command = new DeleteObjectCommand(params);
+            const response = await s3.send(command);
+            console.log("Deleted successfully:", response);
+          } catch (err) {
+            console.error("Error deleting object:", err);
+          }
+        }
         return res.status(400).send(`Invalid time range: ${start} - ${end}`);
       }
     }
-    const updatedGround = await Ground.findByIdAndUpdate(groundId, {
-      name,
-      images: image,
-      address,
-      availability,
-      description,
-    });
+    const newImages = [];
+    if (removedImages.length != 0) {
+      for (const photo of removedImages) {
+        const url = new URL(photo);
+        const key = url.pathname.substring(1);
+        console.log(key);
+
+        const params = {
+          Bucket: "futsal-pics",
+          Key: key,
+        };
+        try {
+          const command = new DeleteObjectCommand(params);
+          const response = await s3.send(command);
+          console.log("Deleted successfully:", response);
+        } catch (err) {
+          console.error("Error deleting object:", err);
+        }
+      }
+      for (const image of images) {
+        for (const photo of removedImages) {
+          if (image != photo) {
+            newImages.push(image);
+          }
+        }
+      }
+    }
+    let updatedGround = null;
+    if (newImages.length != 0) {
+      updatedGround = await Ground.findByIdAndUpdate(groundId, {
+        name,
+        images: newImages,
+        address,
+        availability,
+        description,
+      });
+    } else {
+      updatedGround = await Ground.findByIdAndUpdate(groundId, {
+        name,
+        images: images,
+        address,
+        availability,
+        description,
+      });
+    }
+
     if (!updatedGround) {
       return res.send("Ground couldnt be updated, try again letter");
     }
@@ -103,9 +260,9 @@ export const viewGrounds = async (req, res) => {
     admin: admin._id,
   });
   if (grounds.length == 0) {
-    return res.send("no grounds for this admin");
+    return res.status(400).json({ msg: "no grounds" });
   }
-  return res.send(grounds);
+  return res.status(200).json({ grounds });
 };
 export const viewGround = async (req, res) => {
   const id = req.params.id;

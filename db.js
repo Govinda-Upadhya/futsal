@@ -26,10 +26,17 @@ const adminSchema = new mongoose.Schema({
     required: [true, "Email is required"],
     unique: true,
   },
-  profile: String,
+  profile: {
+    type: String,
+    default: "https://stock.adobe.com/search?k=profile+icon",
+  },
   contact: {
     type: [String],
     default: [],
+  },
+  contact: {
+    type: String,
+    required: true,
   },
   password: {
     type: String,
