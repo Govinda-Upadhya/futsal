@@ -1,7 +1,10 @@
-import { Admin } from "../../db.js";
+import { Admin, Booking, Ground } from "../../db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
 import {
+  APP_EMAIL,
+  APP_PASS,
   AWS_ACCESS_KEY,
   AWS_BUCKET_NAME,
   AWS_REGION,
@@ -105,4 +108,107 @@ export const adminSignIn = async (req, res) => {
 export const isLoggedIn = async (req, res) => {
   const admin = req.admin;
   return res.status(200).send("user logged in");
+};
+
+export const getBooking = async (req, res) => {
+  const adminId = req.admin;
+  const admin_id = await Admin.findOne({ email: adminId.email });
+
+  const grounds = await Ground.find({ admin: admin_id });
+
+  const bookings = await Booking.find().populate("ground", "name");
+
+  let mainBooking = [];
+  for (const ground of grounds) {
+    for (const booking of bookings) {
+      if (String(booking.ground._id) == String(ground._id)) {
+        mainBooking.push(booking);
+      }
+    }
+  }
+
+  return res.json({ bookings: mainBooking });
+};
+
+export const acceptBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+    const booking = await Booking.findByIdAndUpdate(bookingId, {
+      status: "CONFIRMED",
+    }).populate("ground", "name");
+    if (!booking) {
+      return res.status(404).json({ msg: "cannot find the booking" });
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: APP_EMAIL,
+        pass: APP_PASS,
+      },
+    });
+    const formattedDate = new Date(booking.date).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    await transporter.sendMail({
+      from: APP_EMAIL,
+      to: booking.email,
+      subject: "Booking confirmed",
+      text: `dear ${booking.name} your booking for ground ${booking.ground.name} on ${formattedDate} has been confirmed. please be on time and have fun`,
+    });
+
+    res.json({ message: "confirmation send to client" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to send screenshot" });
+  }
+};
+
+export const rejectBooking = async (req, res) => {
+  const info = req.body;
+  const booking = await Booking.findById(info.bookingId).populate(
+    "ground",
+    "name"
+  );
+  const admin = await Admin.findOne({ email: req.admin.email });
+  if (!booking) {
+    return res.status(404).json({ msg: "booking info invalid" });
+  }
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: APP_EMAIL,
+      pass: APP_PASS,
+    },
+  });
+  const formattedDate = new Date(booking.date).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+  await transporter.sendMail({
+    from: APP_EMAIL,
+    to: booking.email,
+    subject: "Booking rejected",
+    text: `dear ${booking.name} your booking for ground ${booking.ground.name} on ${formattedDate} has been rejected because of "${info.reason}" as stated by the owner of the ground, for further query please contact the owner at number ${admin.contact}`,
+  });
+  await transporter.sendMail({
+    from: APP_EMAIL,
+    to: admin.email,
+    subject: `booking with id ${booking._id} done by ${booking.name} with contact info ${booking.contact} becuase of reason "${info.reason}"`,
+    text: `dear ${booking.name} your booking for ground ${booking.ground.name} on ${booking.date} has been rejected because of "${info.reason}" as stated by the owner of the ground, for further query please contact the owner`,
+  });
+  await Booking.deleteOne({ _id: booking._id });
+  return res.json({ msg: "booking rejected and removed successfully " });
+};
+
+export const deleteBooking = async (req, res) => {
+  const id = req.params.id;
+  const deleting = await Booking.deleteOne({ _id: id });
+  if (!deleting) {
+    return res.status(400).json({ msg: "couldnt be deleted" });
+  }
+  return res.json({ msg: "deleted successfully" });
 };

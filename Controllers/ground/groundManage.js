@@ -35,6 +35,7 @@ export const groundPics = async (req, res) => {
 
   try {
     const url = await getSignedUrl(s3, command, { expiresIn: 180 });
+    console.log("url", url, imageUrl);
     return res.json({ url, imageUrl });
   } catch (err) {
     console.error(err);
@@ -43,7 +44,19 @@ export const groundPics = async (req, res) => {
 };
 
 export const createGround = async (req, res) => {
-  const { name, image, address, availability, description } = req.body;
+  const {
+    name,
+    image,
+    address,
+    availability,
+    description,
+    type,
+    features,
+    pricePerHour,
+    rating,
+    location,
+  } = req.body;
+
   try {
     const groundExists = await Ground.find({
       name: { $regex: String(name || ""), $options: "i" },
@@ -66,7 +79,6 @@ export const createGround = async (req, res) => {
         for (const photo of image) {
           const url = new URL(photo);
           const key = url.pathname.substring(1);
-          console.log(key);
 
           const params = {
             Bucket: "futsal-pics",
@@ -75,7 +87,6 @@ export const createGround = async (req, res) => {
           try {
             const command = new DeleteObjectCommand(params);
             const response = await s3.send(command);
-            console.log("Deleted successfully:", response);
           } catch (err) {
             console.error("Error deleting object:", err);
           }
@@ -89,8 +100,13 @@ export const createGround = async (req, res) => {
       description: description,
       address: address,
       availability: availability,
-      images: image,
+      image: image,
       admin: admin._id,
+      pricePerHour: parseInt(pricePerHour),
+      features: features,
+      rating: rating,
+      type: type,
+      location: location,
     });
     return res.send("ground created");
   } catch (error) {

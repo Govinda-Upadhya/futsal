@@ -45,56 +45,94 @@ const adminSchema = new mongoose.Schema({
   },
 });
 
-const groundSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Ground name is required"],
+const groundSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Ground name is required"],
+    },
+    type: {
+      type: String,
+      enum: ["Football", "Cricket", "Basketball", "Tennis", "Badminton"],
+      required: [true, "Ground type is required"],
+    },
+    location: {
+      type: String,
+      required: [true, "Location is required"],
+    },
+    pricePerHour: {
+      type: Number,
+      required: [true, "Price per hour is required"],
+    },
+    rating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    features: {
+      type: [String],
+      default: [],
+    },
+    image: {
+      type: [String],
+      required: [true, "Image URL is required"],
+    },
+    description: {
+      type: String,
+      default: "",
+    },
+    availability: {
+      type: [timeRangeSchema], // ✅ keeping time ranges
+      default: [],
+    },
+    admin: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Admin",
+      required: true,
+    },
   },
-  address: {
-    type: String,
-    required: [true, "Address is required"],
-  },
-  images: {
-    type: [String],
-    default: [],
-  },
-  availability: {
-    type: [timeRangeSchema],
-    default: [],
-  },
-  description: {
-    type: String,
-  },
-  admin: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Admin",
-    required: true,
-  },
-});
+  { timestamps: true }
+);
+const bookingSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      required: [true],
+    },
+    name: {
+      type: String,
+    },
+    contact: {
+      type: String,
+      required: true,
+    },
+    amount: {
+      type: Number,
+    },
+    date: {
+      type: Date,
+    },
+    time: {
+      type: [timeRangeSchema],
+      required: true,
+    },
+    bookingId: {
+      type: String,
+    },
+    ground: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Ground",
 
-const bookingSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    required: [true],
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["CONFIRMED", "PENDING", "REJECTED"],
+    },
   },
-  contact: {
-    type: String,
-    required: true,
-  },
-  date: {
-    type: Date,
-  },
-  time: {
-    type: timeRangeSchema,
-    required: true,
-  },
-  ground: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Ground",
-    unique: true,
-    required: true,
-  },
-});
+  { timestamps: true }
+);
 
 export const Admin = mongoose.model("Admin", adminSchema);
 export const Ground = mongoose.model("Ground", groundSchema);

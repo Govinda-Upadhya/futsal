@@ -18,12 +18,13 @@ app.use(
 );
 app.use(e.json());
 app.use(cookieParser());
-app.use("/admin", adminRoutes);
 app.use("/users", userRoutes);
+app.use("/admin", adminRoutes);
 
 async function main() {
   try {
     await mongoose.connect(db_url);
+
     app.listen(3001, () => {
       console.log("listening...");
     });

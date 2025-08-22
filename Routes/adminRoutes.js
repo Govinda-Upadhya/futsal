@@ -1,9 +1,13 @@
 import { Router } from "express";
 import {
+  acceptBooking,
   adminProfile,
   adminSignIn,
   adminSignUp,
+  deleteBooking,
+  getBooking,
   isLoggedIn,
+  rejectBooking,
 } from "../Controllers/admin/adminManage.js";
 import { adminMiddleware } from "../authmiddleware.js";
 import {
@@ -27,5 +31,8 @@ adminRoutes.get("/seeGrounds", viewGrounds);
 adminRoutes.get("/seeGround/:id", viewGround);
 adminRoutes.delete("/deleteground/:id", deleteGround);
 adminRoutes.put("/updateground/:id", updateGround);
-
+adminRoutes.get("/bookings", getBooking);
+adminRoutes.post("/bookings/acceptbooking", acceptBooking);
+adminRoutes.delete("/bookings/delete/:id", deleteBooking);
+adminRoutes.post("/bookings/rejectbooking", rejectBooking);
 export default adminRoutes;
