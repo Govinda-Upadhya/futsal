@@ -51,6 +51,9 @@ const groundSchema = new mongoose.Schema(
       type: String,
       required: [true, "Ground name is required"],
     },
+    capacity: {
+      type: Number,
+    },
     type: {
       type: String,
       enum: ["Football", "Cricket", "Basketball", "Tennis", "Badminton"],
@@ -64,12 +67,7 @@ const groundSchema = new mongoose.Schema(
       type: Number,
       required: [true, "Price per hour is required"],
     },
-    rating: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5,
-    },
+
     features: {
       type: [String],
       default: [],

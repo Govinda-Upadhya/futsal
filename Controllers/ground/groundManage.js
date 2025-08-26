@@ -47,7 +47,7 @@ export const createGround = async (req, res) => {
   const {
     name,
     image,
-    address,
+    capacity,
     availability,
     description,
     type,
@@ -61,7 +61,7 @@ export const createGround = async (req, res) => {
     const groundExists = await Ground.find({
       name: { $regex: String(name || ""), $options: "i" },
       description: { $regex: String(description || ""), $options: "i" },
-      address: { $regex: String(address || ""), $options: "i" },
+      location: { $regex: String(location || ""), $options: "i" },
     });
 
     if (groundExists.length != 0) {
@@ -98,7 +98,7 @@ export const createGround = async (req, res) => {
     const createGround = await Ground.create({
       name: name,
       description: description,
-      address: address,
+      capacity: capacity,
       availability: availability,
       image: image,
       admin: admin._id,
@@ -137,7 +137,8 @@ export const updateGround = async (req, res) => {
   const groundId = req.params.id;
   const {
     name,
-    address,
+    location,
+    capacity,
     availability,
     description,
     images,
@@ -246,17 +247,19 @@ export const updateGround = async (req, res) => {
       updatedGround = await Ground.findByIdAndUpdate(groundId, {
         name,
         images: newImages,
-        address,
+        location,
         availability,
         description,
+        capacity,
       });
     } else {
       updatedGround = await Ground.findByIdAndUpdate(groundId, {
         name,
         images: images,
-        address,
+        location,
         availability,
         description,
+        capacity,
       });
     }
 
