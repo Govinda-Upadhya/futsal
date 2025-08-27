@@ -1,6 +1,8 @@
 import { APP_EMAIL, APP_PASS } from "../../config.js";
+import multer from "multer";
 import { Admin, Booking, Ground } from "../../db.js";
 import nodemailer from "nodemailer";
+const upload = multer({ storage: multer.memoryStorage() });
 export const fetchGrounds = async (req, res) => {
   const grounds = await Ground.find({});
   if (grounds.length == 0) {
@@ -66,53 +68,62 @@ export const bookinginfo = async (req, res) => {
     info: info,
   });
 };
-export const mailer = async (req, res) => {
-  try {
-    const { screenshot, groundId, name, contactInfo, email } = req.body; // base64 string
-    const ground = await Ground.findById(groundId).populate("admin", "_id");
-    const admin = await Admin.findById(ground.admin._id);
+export const mailer = [
+  upload.single("screenshot"), // 👈 expect "screenshot" field from FormData
+  async (req, res) => {
+    try {
+      const { groundId, name, contactInfo, email } = req.body;
+      const file = req.file; // 👈 screenshot file is here (in memory)
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail", // or SMTP server
-      auth: {
-        user: APP_EMAIL,
-        pass: APP_PASS,
-      },
-    });
+      if (!file) {
+        return res.status(400).json({ error: "Screenshot is required" });
+      }
 
-    await transporter.sendMail({
-      from: APP_EMAIL,
-      to: admin.email,
-      subject: "Payment Screenshot",
-      text: "Here is the payment screenshot",
-      attachments: [
-        {
-          filename: "payment.png",
-          content: screenshot.split("base64,")[1], // remove prefix
-          encoding: "base64",
+      const ground = await Ground.findById(groundId).populate("admin", "_id");
+      const admin = await Admin.findById(ground.admin._id);
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail", // or your SMTP
+        auth: {
+          user: APP_EMAIL,
+          pass: APP_PASS,
         },
-      ],
-    });
-    await transporter.sendMail({
-      from: APP_EMAIL,
-      to: email,
-      subject: "Payment Screenshot",
-      text: "Here is the payment screenshot you have send to the owner. the owner will verify your payment and then confirm your booking. after the booking has been confirmed you will be notified via email",
-      attachments: [
-        {
-          filename: "payment.png",
-          content: screenshot.split("base64,")[1], // remove prefix
-          encoding: "base64",
-        },
-      ],
-    });
+      });
 
-    res.json({ message: "Screenshot sent successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to send screenshot" });
-  }
-};
+      const attachment = {
+        filename: file.originalname, // preserve user file name
+        content: file.buffer, // use buffer (no base64 conversion)
+        contentType: file.mimetype, // e.g. image/png, image/jpeg
+      };
+
+      // Email to Admin
+      const adminMail = transporter.sendMail({
+        from: APP_EMAIL,
+        to: admin.email,
+        subject: "Payment Screenshot",
+        text: `Payment screenshot from ${name}, contact: ${contactInfo}, ground: ${groundId}`,
+        attachments: [attachment],
+      });
+
+      // Confirmation Email to User
+      const userMail = transporter.sendMail({
+        from: APP_EMAIL,
+        to: email,
+        subject: "Payment Screenshot Confirmation",
+        text: `Here is the payment screenshot you sent to the ground owner. The owner will verify your payment and confirm your booking. You will be notified via email once confirmed.`,
+        attachments: [attachment],
+      });
+
+      // run in parallel
+      await Promise.all([adminMail, userMail]);
+
+      res.json({ message: "Screenshot sent successfully" });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to send screenshot" });
+    }
+  },
+];
 
 export const getTimeBooked = async (req, res) => {
   const bookings = await Booking.find({
