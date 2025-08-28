@@ -132,6 +132,15 @@ const bookingSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const challengeSchema = new mongoose.Schema({
+  teamName: String,
+  availability: String,
+  email: String,
+  memebers: Number,
+  sport: String,
+  teamImage: String,
+});
 export const Admin = mongoose.model("Admin", adminSchema);
 export const Ground = mongoose.model("Ground", groundSchema);
 export const Booking = mongoose.model("Booking", bookingSchema);
+export const Challenges = mongoose.model("Challenges", challengeSchema);

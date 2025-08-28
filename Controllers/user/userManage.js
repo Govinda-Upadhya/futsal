@@ -1,6 +1,6 @@
 import { APP_EMAIL, APP_PASS } from "../../config.js";
 import multer from "multer";
-import { Admin, Booking, Ground } from "../../db.js";
+import { Admin, Booking, Challenges, Ground } from "../../db.js";
 import nodemailer from "nodemailer";
 const upload = multer({ storage: multer.memoryStorage() });
 export const fetchGrounds = async (req, res) => {
@@ -83,7 +83,9 @@ export const mailer = [
       const admin = await Admin.findById(ground.admin._id);
 
       const transporter = nodemailer.createTransport({
-        service: "gmail", // or your SMTP
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true, // use SSL
         auth: {
           user: APP_EMAIL,
           pass: APP_PASS,
@@ -140,4 +142,59 @@ export const getTimeBooked = async (req, res) => {
   }
   console.log(time);
   return res.json({ bookedTime: time });
+};
+
+export const createChallenge = async (req, res) => {
+  const challengeInfo = req.body;
+  const { teamName, availability, email, memebers, sport } =
+    challengeInfo.newData;
+  const imageUrl = challengeInfo.imageUrl;
+
+  try {
+    await Challenges.create({
+      teamImage: imageUrl,
+      teamName: teamName,
+      availability: availability,
+      sport,
+      email,
+      memebers,
+    });
+    return res.status(200).json({ msg: "done" });
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ msg: "not done" });
+  }
+};
+
+export const sendChallenge = async (req, res) => {
+  let challenges = await Challenges.find({});
+
+  return res.json({ challenges });
+};
+
+export const acceptChallenge = async (req, res) => {
+  const { data, id } = req.body;
+  console.log(data);
+  const challenge = await Challenges.findById(id);
+  console.log(challenge);
+  if (!challenge) {
+    return res.status(404).json({ msg: "challenge with this id doesnt exist" });
+  }
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true, // use SSL
+    auth: {
+      user: APP_EMAIL,
+      pass: APP_PASS,
+    },
+  });
+  const adminMail = transporter.sendMail({
+    from: APP_EMAIL,
+    to: challenge.email,
+    subject: "Challenge accepted",
+    text: `Your challenge has been accepted by ${data.name} please contact the accepter on phone ${data.phone} or email ${data.email}`,
+  });
+  await Challenges.deleteOne({ _id: id });
+  return res.json({ msg: "challenge accepted" });
 };
