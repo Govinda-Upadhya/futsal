@@ -146,8 +146,9 @@ export const getTimeBooked = async (req, res) => {
 
 export const createChallenge = async (req, res) => {
   const challengeInfo = req.body;
-  const { teamName, availability, email, memebers, sport } =
-    challengeInfo.newData;
+  console.log(challengeInfo);
+  const { teamName, availability, email, members, sport, description } =
+    challengeInfo;
   const imageUrl = challengeInfo.imageUrl;
 
   try {
@@ -157,7 +158,8 @@ export const createChallenge = async (req, res) => {
       availability: availability,
       sport,
       email,
-      memebers,
+      members,
+      description,
     });
     return res.status(200).json({ msg: "done" });
   } catch (error) {

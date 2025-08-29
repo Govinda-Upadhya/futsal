@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { type } from "os";
 
 const timeRangeSchema = new mongoose.Schema(
   {
@@ -134,11 +135,12 @@ const bookingSchema = new mongoose.Schema(
 
 const challengeSchema = new mongoose.Schema({
   teamName: String,
-  availability: String,
+  availability: { type: [{ date: String }] },
   email: String,
-  memebers: Number,
+  members: String,
   sport: String,
   teamImage: String,
+  description: String,
 });
 export const Admin = mongoose.model("Admin", adminSchema);
 export const Ground = mongoose.model("Ground", groundSchema);
