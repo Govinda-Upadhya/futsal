@@ -44,10 +44,19 @@ export const adminSignUp = async (req, res) => {
     const userExists = await Admin.find({
       email: email,
     });
+    const contactExists = await Admin.find({ contact: contact });
 
     if (userExists.length != 0) {
-      return res.send("user already exists");
+      return res
+        .status(404)
+        .send({ msg: "user already exists,please use a different email." });
     }
+    if (contactExists.length != 0) {
+      return res
+        .status(404)
+        .send({ msg: "contact already exists,please use a different one." });
+    }
+
     const salt = await bcrypt.genSalt(5);
     const newPassword = await bcrypt.hash(password, salt);
     let createUser = await Admin.create({
