@@ -4,7 +4,10 @@ import {
   adminProfile,
   adminSignIn,
   adminSignUp,
+  changePassword,
+  changePasswordLink,
   deleteBooking,
+  getAdmin,
   getBooking,
   isLoggedIn,
   rejectBooking,
@@ -20,11 +23,14 @@ import {
 } from "../Controllers/ground/groundManage.js";
 const adminRoutes = Router();
 
+adminRoutes.post("/changePassword/link/:id", changePassword);
+adminRoutes.post("/changePassword", changePasswordLink);
 adminRoutes.post("/signup", adminSignUp);
 adminRoutes.post("/getpresignedurl/signup", adminProfile);
 adminRoutes.post("/signin", adminSignIn);
 adminRoutes.use(adminMiddleware);
 adminRoutes.get("/loggedIn", isLoggedIn);
+adminRoutes.get("/getAdmin", getAdmin);
 adminRoutes.post("/createground", createGround);
 adminRoutes.post("/createground/uploadpic", groundPics);
 adminRoutes.get("/seeGrounds", viewGrounds);
@@ -35,4 +41,5 @@ adminRoutes.get("/bookings", getBooking);
 adminRoutes.post("/bookings/acceptbooking", acceptBooking);
 adminRoutes.delete("/bookings/delete/:id", deleteBooking);
 adminRoutes.post("/bookings/rejectbooking", rejectBooking);
+
 export default adminRoutes;

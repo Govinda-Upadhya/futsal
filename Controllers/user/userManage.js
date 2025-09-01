@@ -2,6 +2,7 @@ import { APP_EMAIL, APP_PASS } from "../../config.js";
 import multer from "multer";
 import { Admin, Booking, Challenges, Ground } from "../../db.js";
 import nodemailer from "nodemailer";
+import { transporterMain } from "../../lib.js";
 const upload = multer({ storage: multer.memoryStorage() });
 export const fetchGrounds = async (req, res) => {
   const grounds = await Ground.find({});
@@ -199,4 +200,74 @@ export const acceptChallenge = async (req, res) => {
   });
   await Challenges.deleteOne({ _id: id });
   return res.json({ msg: "challenge accepted" });
+};
+
+export const seeDate = async (req, res) => {
+  try {
+    const { searchDate } = req.body;
+    if (!searchDate) {
+      return res.status(400).json({ error: "searchDate is required" });
+    }
+
+    const bookings = await Booking.find({ date: searchDate }).populate(
+      "ground"
+    );
+    console.log("bookings:", bookings);
+
+    const allGrounds = await Ground.find({});
+
+    const availableGroundIds = [];
+
+    for (const ground of allGrounds) {
+      const groundBookings = bookings.filter(
+        (b) => b.ground._id.toString() === ground._id.toString()
+      );
+
+      const bookedSlots = groundBookings.flatMap((b) => b.time);
+
+      const freeSlots = ground.availability.filter((slot) => {
+        return !bookedSlots.some(
+          (booked) => booked.start === slot.start && booked.end === slot.end
+        );
+      });
+
+      if (freeSlots.length > 0) {
+        availableGroundIds.push(ground._id.toString());
+      }
+    }
+
+    return res.status(200).json({ availableGroundIds });
+  } catch (err) {
+    console.error("Error in seeDate:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+export const contactUs = async (req, res) => {
+  try {
+    const { name, email, message } = req.body;
+
+    // Basic validation
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    // Send mail
+    await transporterMain.sendMail({
+      from: APP_EMAIL, // sender info
+      to: APP_EMAIL, // your app inbox
+      subject: "📩 New Contact Form Submission",
+      text: `You got a new message from your app:\n\nName: ${name}\nEmail: ${email}\nMessage: ${message}`,
+      html: `
+        <h3>New Contact Form Submission</h3>
+        <p><b>Name:</b> ${name}</p>
+        <p><b>Email:</b> ${email}</p>
+        <p><b>Message:</b> ${message}</p>
+      `,
+    });
+
+    return res.status(200).json({ msg: "Message sent successfully!" });
+  } catch (err) {
+    console.error("Error sending contact message:", err);
+    return res.status(500).json({ error: "Failed to send message" });
+  }
 };

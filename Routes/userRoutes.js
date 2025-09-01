@@ -3,10 +3,12 @@ import {
   acceptChallenge,
   bookGround,
   bookinginfo,
+  contactUs,
   createChallenge,
   fetchGrounds,
   getTimeBooked,
   mailer,
+  seeDate,
   sendChallenge,
   viewGrounduser,
 } from "../Controllers/user/userManage.js";
@@ -23,3 +25,5 @@ userRoutes.get("/bookedTime", getTimeBooked);
 userRoutes.post("/createChallenge", createChallenge);
 userRoutes.get("/getChallenge", sendChallenge);
 userRoutes.post("/acceptChallenge", acceptChallenge);
+userRoutes.post("/searchDate", seeDate);
+userRoutes.post("/contactus", contactUs);

@@ -14,6 +14,8 @@ import {
 
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { allowedOrigin } from "../../index.js";
+import { transporterMain } from "../../lib.js";
 
 const s3 = new S3Client({
   region: AWS_REGION,
@@ -70,6 +72,12 @@ export const adminProfile = async (req, res) => {
     res.status(500).json({ error: "Could not generate presigned URL" });
   }
 };
+export const getAdmin = async (req, res) => {
+  const admin = req.admin;
+  const info = await Admin.findOne({ email: admin.email });
+
+  return res.json({ admin: { name: info.name, image: info.profile } });
+};
 export const adminSignIn = async (req, res) => {
   const { email, password } = req.body;
 
@@ -95,11 +103,11 @@ export const adminSignIn = async (req, res) => {
 
     return res
       .cookie("token", token, {
-        sameSite: "lax", // or 'none' if using https + cross-origin
+        sameSite: "lax",
         httpOnly: true,
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
-      .json({ message: "Login successful" });
+      .json({ message: "Login successful", token: token });
   } catch (error) {
     console.log("error", error);
   }
@@ -211,4 +219,37 @@ export const deleteBooking = async (req, res) => {
     return res.status(400).json({ msg: "couldnt be deleted" });
   }
   return res.json({ msg: "deleted successfully" });
+};
+
+export const changePassword = async (req, res) => {
+  const id = req.params.id;
+  console.log(id);
+  const info = req.body;
+  console.log(info);
+  const user = await Admin.findById(id);
+  if (!user) {
+    return res.status(404).json({ msg: "user doesnt exist" });
+  }
+  const newPassword = await bcrypt.hash(info.password, 5);
+  await Admin.updateOne({ _id: user._id }, { $set: { password: newPassword } });
+  return res.status(200).json({ msg: "done" });
+};
+export const changePasswordLink = async (req, res) => {
+  const info = req.body;
+  try {
+    const admin = await Admin.findOne({ email: info.email });
+    if (!admin) {
+      return res.status(404).json({ msg: "no such emails registered" });
+    }
+    const link = `${allowedOrigin}/admin/changePassword/${admin._id}`;
+    await transporterMain.sendMail({
+      from: APP_EMAIL,
+      to: admin.email,
+      subject: `change password`,
+      text: `dear user please click on this link to change the password. ${link}`,
+    });
+    return res.status(200).json({ msg: "Link send to your email" });
+  } catch (error) {
+    return res.status(500).json({ msg: "Internal server" });
+  }
 };
