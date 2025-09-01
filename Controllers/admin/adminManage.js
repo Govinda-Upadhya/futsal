@@ -15,7 +15,19 @@ import {
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { allowedOrigin } from "../../index.js";
-import { transporterMain } from "../../lib.js";
+
+// Corrected nodemailer transporter configuration
+export const transporterMain = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: APP_EMAIL,
+    pass: APP_PASS,
+  },
+  tls: {
+    // This option can be used in development to bypass certificate errors
+    rejectUnauthorized: false,
+  },
+});
 
 const s3 = new S3Client({
   region: AWS_REGION,
@@ -148,19 +160,12 @@ export const acceptBooking = async (req, res) => {
       return res.status(404).json({ msg: "cannot find the booking" });
     }
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: APP_EMAIL,
-        pass: APP_PASS,
-      },
-    });
     const formattedDate = new Date(booking.date).toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "short",
       year: "numeric",
     });
-    await transporter.sendMail({
+    await transporterMain.sendMail({
       from: APP_EMAIL,
       to: booking.email,
       subject: "Booking confirmed",
@@ -184,25 +189,19 @@ export const rejectBooking = async (req, res) => {
   if (!booking) {
     return res.status(404).json({ msg: "booking info invalid" });
   }
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: APP_EMAIL,
-      pass: APP_PASS,
-    },
-  });
+
   const formattedDate = new Date(booking.date).toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
-  await transporter.sendMail({
+  await transporterMain.sendMail({
     from: APP_EMAIL,
     to: booking.email,
     subject: "Booking rejected",
     text: `dear ${booking.name} your booking for ground ${booking.ground.name} on ${formattedDate} has been rejected because of "${info.reason}" as stated by the owner of the ground, for further query please contact the owner at number ${admin.contact}`,
   });
-  await transporter.sendMail({
+  await transporterMain.sendMail({
     from: APP_EMAIL,
     to: admin.email,
     subject: `booking with id ${booking._id} done by ${booking.name} with contact info ${booking.contact} becuase of reason "${info.reason}"`,

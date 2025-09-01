@@ -83,16 +83,6 @@ export const mailer = [
       const ground = await Ground.findById(groundId).populate("admin", "_id");
       const admin = await Admin.findById(ground.admin._id);
 
-      const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true, // use SSL
-        auth: {
-          user: APP_EMAIL,
-          pass: APP_PASS,
-        },
-      });
-
       const attachment = {
         filename: file.originalname, // preserve user file name
         content: file.buffer, // use buffer (no base64 conversion)
@@ -100,7 +90,7 @@ export const mailer = [
       };
 
       // Email to Admin
-      const adminMail = transporter.sendMail({
+      const adminMail = transporterMain.sendMail({
         from: APP_EMAIL,
         to: admin.email,
         subject: "Payment Screenshot",
@@ -109,7 +99,7 @@ export const mailer = [
       });
 
       // Confirmation Email to User
-      const userMail = transporter.sendMail({
+      const userMail = transporterMain.sendMail({
         from: APP_EMAIL,
         to: email,
         subject: "Payment Screenshot Confirmation",
@@ -133,7 +123,7 @@ export const getTimeBooked = async (req, res) => {
     date: req.query.date,
     ground: req.query.ground,
   });
-  console.log(bookings);
+
   if (bookings.length == 0) {
     return res.json({ msg: "no booking" });
   }
@@ -177,22 +167,14 @@ export const sendChallenge = async (req, res) => {
 
 export const acceptChallenge = async (req, res) => {
   const { data, id } = req.body;
-  console.log(data);
+
   const challenge = await Challenges.findById(id);
   console.log(challenge);
   if (!challenge) {
     return res.status(404).json({ msg: "challenge with this id doesnt exist" });
   }
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // use SSL
-    auth: {
-      user: APP_EMAIL,
-      pass: APP_PASS,
-    },
-  });
-  const adminMail = transporter.sendMail({
+
+  transporterMain.sendMail({
     from: APP_EMAIL,
     to: challenge.email,
     subject: "Challenge accepted",
