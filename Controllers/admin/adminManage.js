@@ -145,7 +145,7 @@ export const getBooking = async (req, res) => {
 
   const grounds = await Ground.find({ admin: admin_id });
 
-  const bookings = await Booking.find().populate("ground", "name");
+  const bookings = await Booking.find().populate("ground", "name type");
 
   let mainBooking = [];
   for (const ground of grounds) {
