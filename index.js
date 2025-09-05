@@ -8,7 +8,7 @@ import cors from "cors";
 
 const app = e();
 
-export const allowedOrigin = "http://localhost:5173";
+export const allowedOrigin = ["https://www.thanggo.com", "https://thanggo.com"];
 
 app.use(e.json({ limit: "10mb" }));
 app.use(e.urlencoded({ limit: "10mb", extended: true }));
