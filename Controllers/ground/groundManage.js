@@ -144,6 +144,7 @@ export const updateGround = async (req, res) => {
     images,
     removedImages,
     newImageUrls,
+    pricePerHour,
   } = req.body;
 
   try {
@@ -153,9 +154,10 @@ export const updateGround = async (req, res) => {
         const url = new URL(photo);
         const key = url.pathname.substring(1);
         console.log(key);
+        console.log("ground doesnt exist");
 
         const params = {
-          Bucket: "futsal-pics",
+          Bucket: AWS_BUCKET_NAME,
           Key: key,
         };
         try {
@@ -171,13 +173,14 @@ export const updateGround = async (req, res) => {
     }
     for (const time of availability) {
       if (!time.start || !time.end) {
+        console.log("time wrong");
         for (const photo of newImageUrls) {
           const url = new URL(photo);
           const key = url.pathname.substring(1);
           console.log(key);
 
           const params = {
-            Bucket: "futsal-pics",
+            Bucket: AWS_BUCKET_NAME,
             Key: key,
           };
           try {
@@ -201,7 +204,7 @@ export const updateGround = async (req, res) => {
           console.log(key);
 
           const params = {
-            Bucket: "futsal-pics",
+            Bucket: AWS_BUCKET_NAME,
             Key: key,
           };
           try {
@@ -217,13 +220,14 @@ export const updateGround = async (req, res) => {
     }
     const newImages = [];
     if (removedImages.length != 0) {
+      console.log("removed image is there");
       for (const photo of removedImages) {
         const url = new URL(photo);
         const key = url.pathname.substring(1);
         console.log(key);
 
         const params = {
-          Bucket: "futsal-pics",
+          Bucket: AWS_BUCKET_NAME,
           Key: key,
         };
         try {
@@ -243,21 +247,26 @@ export const updateGround = async (req, res) => {
       }
     }
     let updatedGround = null;
+    console.log(newImages);
     if (newImages.length != 0) {
+      console.log("new image is there");
       updatedGround = await Ground.findByIdAndUpdate(groundId, {
         name,
-        images: newImages,
+        image: newImages,
         location,
+        pricePerHour,
         availability,
         description,
         capacity,
       });
     } else {
+      console.log("no new image si there");
       updatedGround = await Ground.findByIdAndUpdate(groundId, {
         name,
-        images: images,
+        image: images,
         location,
         availability,
+        pricePerHour,
         description,
         capacity,
       });

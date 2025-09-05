@@ -12,7 +12,7 @@ import {
   sendChallenge,
   viewGrounduser,
 } from "../Controllers/user/userManage.js";
-import { viewGrounds } from "../Controllers/ground/groundManage.js";
+import { groundPics, viewGrounds } from "../Controllers/ground/groundManage.js";
 
 export const userRoutes = Router();
 
@@ -27,3 +27,4 @@ userRoutes.get("/getChallenge", sendChallenge);
 userRoutes.post("/acceptChallenge", acceptChallenge);
 userRoutes.post("/searchDate", seeDate);
 userRoutes.post("/contactus", contactUs);
+userRoutes.post("/createground/uploadpic", groundPics);
