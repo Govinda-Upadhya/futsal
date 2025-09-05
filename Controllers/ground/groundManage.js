@@ -14,6 +14,8 @@ import {
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import axios from "axios";
+const base_delete = `https://www.thanggo.com/api/photo/delete`;
 const s3 = new S3Client({
   region: AWS_REGION,
   credentials: {
@@ -150,47 +152,15 @@ export const updateGround = async (req, res) => {
   try {
     const groundExists = await Ground.findById(groundId);
     if (!groundExists) {
-      for (const photo of newImageUrls) {
-        const url = new URL(photo);
-        const key = url.pathname.substring(1);
-        console.log(key);
-        console.log("ground doesnt exist");
-
-        const params = {
-          Bucket: AWS_BUCKET_NAME,
-          Key: key,
-        };
-        try {
-          const command = new DeleteObjectCommand(params);
-          const response = await s3.send(command);
-          console.log("Deleted successfully:", response);
-        } catch (err) {
-          console.error("Error deleting object:", err);
-        }
-      }
+      const res = await axios.delete(base_delete, { url: newImageUrls });
 
       return res.send("the ground doesnt exists");
     }
     for (const time of availability) {
       if (!time.start || !time.end) {
         console.log("time wrong");
-        for (const photo of newImageUrls) {
-          const url = new URL(photo);
-          const key = url.pathname.substring(1);
-          console.log(key);
+        const res = await axios.delete(base_delete, { url: newImageUrls });
 
-          const params = {
-            Bucket: AWS_BUCKET_NAME,
-            Key: key,
-          };
-          try {
-            const command = new DeleteObjectCommand(params);
-            const response = await s3.send(command);
-            console.log("Deleted successfully:", response);
-          } catch (err) {
-            console.error("Error deleting object:", err);
-          }
-        }
         return res.status(400).send("Start and end times are required");
       }
 
@@ -198,46 +168,16 @@ export const updateGround = async (req, res) => {
       const end = time.end.trim();
 
       if (toMinutes(start) > toMinutes(end)) {
-        for (const photo of newImageUrls) {
-          const url = new URL(photo);
-          const key = url.pathname.substring(1);
-          console.log(key);
+        const res = await axios.delete(base_delete, { url: newImageUrls });
 
-          const params = {
-            Bucket: AWS_BUCKET_NAME,
-            Key: key,
-          };
-          try {
-            const command = new DeleteObjectCommand(params);
-            const response = await s3.send(command);
-            console.log("Deleted successfully:", response);
-          } catch (err) {
-            console.error("Error deleting object:", err);
-          }
-        }
         return res.status(400).send(`Invalid time range: ${start} - ${end}`);
       }
     }
     const newImages = [];
     if (removedImages.length != 0) {
       console.log("removed image is there");
-      for (const photo of removedImages) {
-        const url = new URL(photo);
-        const key = url.pathname.substring(1);
-        console.log(key);
+      const res = await axios.delete(base_delete, { url: removedImages });
 
-        const params = {
-          Bucket: AWS_BUCKET_NAME,
-          Key: key,
-        };
-        try {
-          const command = new DeleteObjectCommand(params);
-          const response = await s3.send(command);
-          console.log("Deleted successfully:", response);
-        } catch (err) {
-          console.error("Error deleting object:", err);
-        }
-      }
       for (const image of images) {
         for (const photo of removedImages) {
           if (image != photo) {

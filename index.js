@@ -19,7 +19,7 @@ app.use(
     credentials: true,
   })
 );
-app.use(e.json());
+
 app.use(cookieParser());
 app.use("/users", userRoutes);
 app.use("/admin", adminRoutes);
