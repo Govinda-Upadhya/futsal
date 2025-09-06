@@ -19,7 +19,7 @@ jobs:
           port: 22
           script: |
             export PATH=$PATH:/root/.nvm/versions/node/v22.19.0/bin
-            cd /root/app/photoserver  # path where your app lives
+            cd /root/app/futsal  # path where your app lives
             git pull origin main
             npm install
-            pm2 restart photoserver
+            pm2 restart backend

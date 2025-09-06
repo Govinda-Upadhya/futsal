@@ -7,7 +7,7 @@ import {
   AWS_SECRET_KEY,
   JWT_SECRET,
 } from "../../config.js";
-
+import { base_delete_admin } from "../../index.js";
 import {
   S3Client,
   PutObjectCommand,
@@ -15,7 +15,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import axios from "axios";
-const base_delete = `https://www.thanggo.com/api/photo/delete`;
+
 const s3 = new S3Client({
   region: AWS_REGION,
   credentials: {
@@ -159,7 +159,9 @@ export const updateGround = async (req, res) => {
     for (const time of availability) {
       if (!time.start || !time.end) {
         console.log("time wrong");
-        const res = await axios.delete(base_delete, { url: newImageUrls });
+        const res = await axios.delete(base_delete_admin, {
+          url: newImageUrls,
+        });
 
         return res.status(400).send("Start and end times are required");
       }

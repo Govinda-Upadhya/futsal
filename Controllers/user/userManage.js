@@ -3,6 +3,8 @@ import multer from "multer";
 import { Admin, Booking, Challenges, Ground } from "../../db.js";
 import nodemailer from "nodemailer";
 import { transporterMain } from "../../lib.js";
+import axios from "axios";
+import { base_delete, base_delete_user } from "../../index.js";
 const upload = multer({ storage: multer.memoryStorage() });
 export const fetchGrounds = async (req, res) => {
   const grounds = await Ground.find({});
@@ -179,6 +181,9 @@ export const acceptChallenge = async (req, res) => {
     to: challenge.email,
     subject: "Challenge accepted",
     text: `Your challenge has been accepted by ${data.name} please contact the accepter on phone ${data.phone} or email ${data.email}`,
+  });
+  const res = await axios.delete(`${base_delete_user}`, {
+    url: challenge.teamImage,
   });
   await Challenges.deleteOne({ _id: id });
   return res.json({ msg: "challenge accepted" });

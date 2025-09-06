@@ -7,7 +7,8 @@ import { userRoutes } from "./Routes/userRoutes.js";
 import cors from "cors";
 
 const app = e();
-
+export const base_delete_admin = `https://www.thanggo.com/api/photo/admin/delete`;
+export const base_delete_user = `https://www.thanggo.com/api/photo/user/delete`;
 export const allowedOrigin = ["https://www.thanggo.com", "https://thanggo.com"];
 
 app.use(e.json({ limit: "10mb" }));
