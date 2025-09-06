@@ -152,7 +152,7 @@ export const updateGround = async (req, res) => {
   try {
     const groundExists = await Ground.findById(groundId);
     if (!groundExists) {
-      const res = await axios.delete(base_delete, {
+      const res = await axios.delete(base_delete_admin, {
         data: { url: newImageUrls },
       });
 
@@ -174,7 +174,7 @@ export const updateGround = async (req, res) => {
       const end = time.end.trim();
 
       if (toMinutes(start) > toMinutes(end)) {
-        const res = await axios.delete(base_delete, {
+        const res = await axios.delete(base_delete_admin, {
           data: { url: newImageUrls },
         });
 
@@ -184,7 +184,7 @@ export const updateGround = async (req, res) => {
     const newImages = [];
     if (removedImages.length != 0) {
       console.log("removed image is there");
-      const res = await axios.delete(base_delete, {
+      const res = await axios.delete(base_delete_admin, {
         data: { url: removedImages },
       });
 
