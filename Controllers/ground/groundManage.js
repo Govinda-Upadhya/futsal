@@ -152,7 +152,9 @@ export const updateGround = async (req, res) => {
   try {
     const groundExists = await Ground.findById(groundId);
     if (!groundExists) {
-      const res = await axios.delete(base_delete, { url: newImageUrls });
+      const res = await axios.delete(base_delete, {
+        data: { url: newImageUrls },
+      });
 
       return res.send("the ground doesnt exists");
     }
@@ -160,7 +162,9 @@ export const updateGround = async (req, res) => {
       if (!time.start || !time.end) {
         console.log("time wrong");
         const res = await axios.delete(base_delete_admin, {
-          url: newImageUrls,
+          data: {
+            url: newImageUrls,
+          },
         });
 
         return res.status(400).send("Start and end times are required");
@@ -170,7 +174,9 @@ export const updateGround = async (req, res) => {
       const end = time.end.trim();
 
       if (toMinutes(start) > toMinutes(end)) {
-        const res = await axios.delete(base_delete, { url: newImageUrls });
+        const res = await axios.delete(base_delete, {
+          data: { url: newImageUrls },
+        });
 
         return res.status(400).send(`Invalid time range: ${start} - ${end}`);
       }
@@ -178,7 +184,9 @@ export const updateGround = async (req, res) => {
     const newImages = [];
     if (removedImages.length != 0) {
       console.log("removed image is there");
-      const res = await axios.delete(base_delete, { url: removedImages });
+      const res = await axios.delete(base_delete, {
+        data: { url: removedImages },
+      });
 
       for (const image of images) {
         for (const photo of removedImages) {

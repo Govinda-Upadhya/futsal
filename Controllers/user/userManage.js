@@ -182,9 +182,10 @@ export const acceptChallenge = async (req, res) => {
     subject: "Challenge accepted",
     text: `Your challenge has been accepted by ${data.name} please contact the accepter on phone ${data.phone} or email ${data.email}`,
   });
-  const deletion = await axios.delete(`${base_delete_user}`, {
-    url: challenge.teamImage,
+  await axios.delete(`${base_delete_user}`, {
+    data: { url: challenge.teamImage },
   });
+
   await Challenges.deleteOne({ _id: id });
   return res.json({ msg: "challenge accepted" });
 };
