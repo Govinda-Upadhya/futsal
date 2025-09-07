@@ -1,7 +1,6 @@
 import { Router } from "express";
 import {
   acceptBooking,
-  adminProfile,
   adminSignIn,
   adminSignUp,
   changePassword,
@@ -16,7 +15,6 @@ import { adminMiddleware } from "../authmiddleware.js";
 import {
   createGround,
   deleteGround,
-  groundPics,
   updateGround,
   viewGround,
   viewGrounds,
@@ -26,13 +24,13 @@ const adminRoutes = Router();
 adminRoutes.post("/changePassword/link/:id", changePassword);
 adminRoutes.post("/changePassword", changePasswordLink);
 adminRoutes.post("/signup", adminSignUp);
-adminRoutes.post("/getpresignedurl/signup", adminProfile);
+
 adminRoutes.post("/signin", adminSignIn);
 adminRoutes.use(adminMiddleware);
 adminRoutes.get("/loggedIn", isLoggedIn);
 adminRoutes.get("/getAdmin", getAdmin);
 adminRoutes.post("/createground", createGround);
-adminRoutes.post("/createground/uploadpic", groundPics);
+
 adminRoutes.get("/seeGrounds", viewGrounds);
 adminRoutes.get("/seeGround/:id", viewGround);
 adminRoutes.delete("/deleteground/:id", deleteGround);

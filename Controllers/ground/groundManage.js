@@ -1,49 +1,9 @@
 import { Admin, Ground } from "../../db.js";
 import { toMinutes } from "../../lib.js";
-import {
-  AWS_ACCESS_KEY,
-  AWS_BUCKET_NAME,
-  AWS_REGION,
-  AWS_SECRET_KEY,
-  JWT_SECRET,
-} from "../../config.js";
+
 import { base_delete_admin } from "../../index.js";
-import {
-  S3Client,
-  PutObjectCommand,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
 import axios from "axios";
-
-const s3 = new S3Client({
-  region: AWS_REGION,
-  credentials: {
-    accessKeyId: AWS_ACCESS_KEY,
-    secretAccessKey: AWS_SECRET_KEY,
-  },
-});
-
-export const groundPics = async (req, res) => {
-  const { fileName, fileType } = req.body;
-  const key = `groundpics/${Date.now()}-${fileName}`;
-  const imageUrl = `https://${AWS_BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com/${key}`;
-
-  const command = new PutObjectCommand({
-    Bucket: AWS_BUCKET_NAME,
-    Key: key,
-    ContentType: fileType,
-  });
-
-  try {
-    const url = await getSignedUrl(s3, command, { expiresIn: 180 });
-    console.log("url", url, imageUrl);
-    return res.json({ url, imageUrl });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Could not generate presigned URL" });
-  }
-};
 
 export const createGround = async (req, res) => {
   const {

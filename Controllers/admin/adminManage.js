@@ -2,18 +2,8 @@ import { Admin, Booking, Ground } from "../../db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
-import {
-  APP_EMAIL,
-  APP_PASS,
-  AWS_ACCESS_KEY,
-  AWS_BUCKET_NAME,
-  AWS_REGION,
-  AWS_SECRET_KEY,
-  JWT_SECRET,
-} from "../../config.js";
+import { APP_EMAIL, APP_PASS, JWT_SECRET } from "../../config.js";
 
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { allowedOrigin } from "../../index.js";
 
 // Corrected nodemailer transporter configuration
@@ -26,14 +16,6 @@ export const transporterMain = nodemailer.createTransport({
   tls: {
     // This option can be used in development to bypass certificate errors
     rejectUnauthorized: false,
-  },
-});
-
-const s3 = new S3Client({
-  region: AWS_REGION,
-  credentials: {
-    accessKeyId: AWS_ACCESS_KEY,
-    secretAccessKey: AWS_SECRET_KEY,
   },
 });
 
@@ -74,25 +56,7 @@ export const adminSignUp = async (req, res) => {
     console.log("error", error);
   }
 };
-export const adminProfile = async (req, res) => {
-  const { fileName, fileType } = req.body;
-  const key = `profiles/${Date.now()}-${fileName}`;
-  const imageUrl = `https://${AWS_BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com/${key}`;
 
-  const command = new PutObjectCommand({
-    Bucket: AWS_BUCKET_NAME,
-    Key: key,
-    ContentType: fileType,
-  });
-
-  try {
-    const url = await getSignedUrl(s3, command, { expiresIn: 60 });
-    return res.json({ url, imageUrl });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Could not generate presigned URL" });
-  }
-};
 export const getAdmin = async (req, res) => {
   const admin = req.admin;
   const info = await Admin.findOne({ email: admin.email });
