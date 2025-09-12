@@ -35,10 +35,7 @@ const adminSchema = new mongoose.Schema({
     type: [String],
     default: [],
   },
-  contact: {
-    type: String,
-    required: true,
-  },
+
   password: {
     type: String,
     required: [true, "Password is required"],

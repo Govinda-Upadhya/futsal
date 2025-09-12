@@ -56,12 +56,22 @@ export const adminSignUp = async (req, res) => {
     console.log("error", error);
   }
 };
-
+export const updateAdmin = async (req, res) => {
+  const userInfo = req.Admin;
+  const user = await Admin.findOne({ email: userInfo.email });
+  const { newInfo } = req.body;
+  await Admin.updateOne(
+    { email: user.email },
+    { contact: newInfo.contact, profile: newInfo.profile, name: newInfo.name },
+    { new: true, runValidators: true }
+  );
+  return res.status(200).json({ msg: "user Updated" });
+};
 export const getAdmin = async (req, res) => {
   const admin = req.admin;
   const info = await Admin.findOne({ email: admin.email });
 
-  return res.json({ admin: { name: info.name, image: info.profile } });
+  return res.json(info);
 };
 export const adminSignIn = async (req, res) => {
   const { email, password } = req.body;

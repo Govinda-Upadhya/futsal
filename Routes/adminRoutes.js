@@ -10,6 +10,7 @@ import {
   getBooking,
   isLoggedIn,
   rejectBooking,
+  updateAdmin,
 } from "../Controllers/admin/adminManage.js";
 import { adminMiddleware } from "../authmiddleware.js";
 import {
@@ -27,10 +28,10 @@ adminRoutes.post("/signup", adminSignUp);
 
 adminRoutes.post("/signin", adminSignIn);
 adminRoutes.use(adminMiddleware);
+adminRoutes.put("/update", updateAdmin);
 adminRoutes.get("/loggedIn", isLoggedIn);
 adminRoutes.get("/getAdmin", getAdmin);
 adminRoutes.post("/createground", createGround);
-
 adminRoutes.get("/seeGrounds", viewGrounds);
 adminRoutes.get("/seeGround/:id", viewGround);
 adminRoutes.delete("/deleteground/:id", deleteGround);
