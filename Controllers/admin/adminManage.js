@@ -223,7 +223,7 @@ export const changePasswordLink = async (req, res) => {
     if (!admin) {
       return res.status(404).json({ msg: "no such emails registered" });
     }
-    const link = `${allowedOrigin}/admin/changePassword/${admin._id}`;
+    const link = `${allowedOrigin[0]}/admin/changePassword/${admin._id}`;
     await transporterMain.sendMail({
       from: APP_EMAIL,
       to: admin.email,
