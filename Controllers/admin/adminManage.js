@@ -57,7 +57,7 @@ export const adminSignUp = async (req, res) => {
   }
 };
 export const updateAdmin = async (req, res) => {
-  const userInfo = req.Admin;
+  const userInfo = req.admin;
   const user = await Admin.findOne({ email: userInfo.email });
   const { newInfo } = req.body;
   await Admin.updateOne(
