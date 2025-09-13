@@ -44,6 +44,7 @@ export const bookGround = async (req, res) => {
       contact: bookingdata.phone,
       time: bookingdata.availability,
       status: "PENDING",
+      screenshot: false,
       ground: ground._id,
       amount: ground.pricePerHour * bookingdata.availability.length,
     });
@@ -79,13 +80,13 @@ export const mailer = [
   upload.single("screenshot"), // 👈 expect "screenshot" field from FormData
   async (req, res) => {
     try {
-      const { groundId, name, contactInfo, email } = req.body;
+      const { groundId, name, contactInfo, email, bookingId } = req.body;
       const file = req.file; // 👈 screenshot file is here (in memory)
 
       if (!file) {
         return res.status(400).json({ error: "Screenshot is required" });
       }
-
+      await Booking.updateOne({ _id: bookingId }, { screenshot: true });
       const ground = await Ground.findById(groundId).populate("admin", "_id");
       const admin = await Admin.findById(ground.admin._id);
 

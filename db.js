@@ -106,6 +106,9 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    screenshot: {
+      type: Boolean,
+    },
     amount: {
       type: Number,
     },

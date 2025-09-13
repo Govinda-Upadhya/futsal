@@ -130,7 +130,10 @@ export const getBooking = async (req, res) => {
   let mainBooking = [];
   for (const ground of grounds) {
     for (const booking of bookings) {
-      if (String(booking.ground._id) == String(ground._id)) {
+      if (
+        String(booking.ground._id) == String(ground._id) &&
+        booking.screenshot == true
+      ) {
         mainBooking.push(booking);
       }
     }
