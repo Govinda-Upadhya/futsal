@@ -120,23 +120,27 @@ export const isLoggedIn = async (req, res) => {
 };
 
 export const getBooking = async (req, res) => {
-  const adminId = req.admin;
-  const admin_id = await Admin.findOne({ email: adminId.email });
-
-  const grounds = await Ground.find({ admin: admin_id });
-
-  const bookings = await Booking.find().populate("ground", "name type");
-
-  let mainBooking = [];
-  for (const ground of grounds) {
-    for (const booking of bookings) {
-      if (String(booking.ground._id) == String(ground._id)) {
-        mainBooking.push(booking);
-      }
+  try {
+    const adminData = req.admin;
+    if (!adminData || !adminData.email) {
+      return res.status(400).json({ error: "Admin not found in request" });
     }
-  }
 
-  return res.json({ bookings: mainBooking });
+    const admin = await Admin.findOne({ email: adminData.email });
+    if (!admin) {
+      return res.status(404).json({ error: "Admin not found" });
+    }
+
+    const grounds = await Ground.find({ admin: admin._id });
+
+    const bookings = await Booking.find({
+      ground: { $in: grounds.map((g) => g._id) },
+    }).populate("ground", "name type");
+
+    return res.json({ bookings });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 };
 
 export const acceptBooking = async (req, res) => {
