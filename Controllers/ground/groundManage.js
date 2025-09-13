@@ -104,6 +104,7 @@ export const updateGround = async (req, res) => {
     availability,
     description,
     images,
+    features,
     removedImages,
     newImageUrls,
     pricePerHour,
@@ -160,26 +161,36 @@ export const updateGround = async (req, res) => {
     console.log(newImages);
     if (newImages.length != 0) {
       console.log("new image is there");
-      updatedGround = await Ground.findByIdAndUpdate(groundId, {
-        name,
-        image: newImages,
-        location,
-        pricePerHour,
-        availability,
-        description,
-        capacity,
-      });
+      updatedGround = await Ground.findByIdAndUpdate(
+        groundId,
+        {
+          name,
+          image: newImages,
+          location,
+          pricePerHour,
+          availability,
+          description,
+          capacity,
+          features,
+        },
+        { new: true, runValidators: true }
+      );
     } else {
       console.log("no new image si there");
-      updatedGround = await Ground.findByIdAndUpdate(groundId, {
-        name,
-        image: images,
-        location,
-        availability,
-        pricePerHour,
-        description,
-        capacity,
-      });
+      updatedGround = await Ground.findByIdAndUpdate(
+        groundId,
+        {
+          name,
+          image: images,
+          location,
+          availability,
+          pricePerHour,
+          description,
+          capacity,
+          features,
+        },
+        { new: true, runValidators: true }
+      );
     }
 
     if (!updatedGround) {
