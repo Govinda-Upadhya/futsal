@@ -61,7 +61,10 @@ export const bookinginfo = async (req, res) => {
   const id = req.params.id;
   console.log(id);
   const info = await Booking.findById(id).populate("ground", "name _id");
-
+  const ground = await Ground.findById(info.ground._id).populate(
+    "admin",
+    "scanner"
+  );
   if (!info) {
     return res.status(404).json({
       msg: "no info",
@@ -69,6 +72,7 @@ export const bookinginfo = async (req, res) => {
   }
   return res.json({
     info: info,
+    scanner: ground.admin.scanner,
   });
 };
 export const mailer = [
