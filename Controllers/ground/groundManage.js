@@ -199,7 +199,7 @@ export const updateGround = async (req, res) => {
     return res.send("Ground updated successfully");
   } catch (error) {
     console.log(error);
-    return res.send("some error occured");
+    return res.json({ msg: "error", error });
   }
 };
 
