@@ -20,7 +20,7 @@ export const transporterMain = nodemailer.createTransport({
 });
 
 export const adminSignUp = async (req, res) => {
-  const { name, password, profile, email, contact } = req.body;
+  const { name, password, profile, email, contact, scanner } = req.body;
   console.log(password);
   try {
     const userExists = await Admin.find({
@@ -47,6 +47,7 @@ export const adminSignUp = async (req, res) => {
       password: newPassword,
       email: email,
       contact: contact,
+      scanner: scanner,
     });
     if (createUser) {
       return res.status(200).send("admin created successfully");
@@ -62,7 +63,12 @@ export const updateAdmin = async (req, res) => {
   const { newInfo } = req.body;
   await Admin.updateOne(
     { email: user.email },
-    { contact: newInfo.contact, profile: newInfo.profile, name: newInfo.name },
+    {
+      contact: newInfo.contact,
+      profile: newInfo.profile,
+      name: newInfo.name,
+      scanner: newInfo.scanner,
+    },
     { new: true, runValidators: true }
   );
   return res.status(200).json({ msg: "user Updated" });

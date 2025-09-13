@@ -22,6 +22,9 @@ const adminSchema = new mongoose.Schema({
     type: String,
     required: [true, "Name is required"],
   },
+  scanner: {
+    type: String,
+  },
   email: {
     type: String,
     required: [true, "Email is required"],
