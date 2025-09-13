@@ -263,3 +263,13 @@ export const contactUs = async (req, res) => {
     return res.status(500).json({ error: "Failed to send message" });
   }
 };
+
+export const cancelBooking = async (req, res) => {
+  const { id } = req.body;
+  const booking = await Booking.findById(id);
+  if (!booking) {
+    return res.status(404).json({ msg: "no such ground" });
+  }
+  await Booking.deleteOne({ _id: id });
+  return res.status(400).json({ msg: "Booking reservation canceled" });
+};

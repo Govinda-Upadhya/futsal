@@ -3,6 +3,7 @@ import {
   acceptChallenge,
   bookGround,
   bookinginfo,
+  cancelBooking,
   contactUs,
   createChallenge,
   fetchGrounds,
@@ -20,6 +21,7 @@ userRoutes.get("/getgrounds", fetchGrounds);
 userRoutes.get("/seegrounds/:id", viewGrounduser);
 userRoutes.post("/bookground/:id", bookGround);
 userRoutes.get("/bookinginfo/:id", bookinginfo);
+userRoutes.post("/cancelBooking", cancelBooking);
 userRoutes.post("/bookinginfo/send_screentshot/", mailer);
 userRoutes.get("/bookedTime", getTimeBooked);
 userRoutes.post("/createChallenge", createChallenge);
