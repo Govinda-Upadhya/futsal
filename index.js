@@ -9,7 +9,11 @@ import cors from "cors";
 const app = e();
 export const base_delete_admin = `https://www.thanggo.com/api/photo/admin/delete`;
 export const base_delete_user = `https://www.thanggo.com/api/photo/user/delete`;
-export const allowedOrigin = ["https://www.thanggo.com", "https://thanggo.com"];
+export const allowedOrigin = [
+  "https://www.thanggo.com",
+  "https://thanggo.com",
+  "http://localhost:5173",
+];
 
 app.use(e.json({ limit: "10mb" }));
 app.use(e.urlencoded({ limit: "10mb", extended: true }));
