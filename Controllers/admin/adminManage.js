@@ -62,11 +62,14 @@ export const updateAdmin = async (req, res) => {
   const user = await Admin.findOne({ email: userInfo.email });
   const { newInfo } = req.body;
   const userExists = await Admin.findOne({ email: newInfo.email });
-  if (userExists) {
-    return res
-      .status(400)
-      .json({ msg: "user already exists please use a different email" });
+  if (newInfo.newEmail) {
+    if (userExists) {
+      return res
+        .status(400)
+        .json({ msg: "user already exists please use a different email" });
+    }
   }
+
   await Admin.updateOne(
     { email: user.email },
     {
