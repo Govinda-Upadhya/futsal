@@ -321,3 +321,38 @@ export const getDailyTimeStats = async (req, res) => {
     return res.status(500).json({ error });
   }
 };
+export const getWeeklyTimeStats = async (req, res) => {
+  try {
+    const bookings = await BookingData.find({
+      status: "CONFIRMED",
+      adminId: req.admin.email,
+    });
+
+    // Days of the week
+    const daysOfWeek = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+
+    // Initialize counts for each day
+    const timeStats = {};
+    daysOfWeek.forEach((day) => (timeStats[day] = 0));
+
+    // Count bookings per day
+    for (let booking of bookings) {
+      const bookingDate = new Date(booking.date); // assuming booking.date exists
+      const dayName = daysOfWeek[bookingDate.getDay()]; // getDay(): 0 = Sunday, 1 = Monday...
+      timeStats[dayName] += 1;
+    }
+
+    return res.json(timeStats);
+  } catch (error) {
+    console.error("Error fetching weekly stats:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
