@@ -264,7 +264,7 @@ export const changePasswordLink = async (req, res) => {
 
 export const overall = async (req, res) => {
   const adminEmail = req.admin.email;
-  const bookingData = await BookingData.find({ email: adminEmail });
+  const bookingData = await BookingData.find({ adminId: adminEmail });
   const totalConfirmedBookings = bookingData.reduce(
     (count, booking) => count + (booking.status === "CONFIRMED" ? 1 : 0),
     0
