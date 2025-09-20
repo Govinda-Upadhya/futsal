@@ -295,14 +295,22 @@ export const getDailyTimeStats = async (req, res) => {
     // Initialize all 24 slots to 0
     const timeStats = {};
     for (let hour = 0; hour < 24; hour++) {
-      const slot = `${hour}:00-${hour + 1}:00`;
+      const startHour = String(hour).padStart(2, "0");
+      const endHour = String(hour + 1).padStart(2, "0");
+      const slot = `${startHour}:00-${endHour}:00`;
       timeStats[slot] = 0;
     }
 
     // Count bookings per slot
     for (let booking of bookings) {
       for (let slot of booking.time) {
-        timeStats[slot] = (timeStats[slot] || 0) + 1;
+        // Ensure slot format also has two digits
+        const [start, end] = slot.split("-");
+        const formattedSlot = `${start.padStart(5, "0")}-${end.padStart(
+          5,
+          "0"
+        )}`;
+        timeStats[formattedSlot] = (timeStats[formattedSlot] || 0) + 1;
       }
     }
 
