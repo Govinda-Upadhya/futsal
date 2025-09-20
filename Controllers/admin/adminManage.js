@@ -286,29 +286,29 @@ export const overall = async (req, res) => {
   });
 };
 export const getDailyTimeStats = async (req, res) => {
-  // Fetch all bookings for that date
-  const bookings = await BookingData.find({
-    date: {
-      $gte: new Date(date.setHours(0, 0, 0, 0)), // start of day
-      $lte: new Date(date.setHours(23, 59, 59, 999)), // end of day
-    },
-    status: "CONFIRMED",
-    adminId: req.admin.email, // optional, if you only want confirmed ones
-  });
+  try {
+    const bookings = await BookingData.find({
+      status: "CONFIRMED",
+      adminId: req.admin.email,
+    });
 
-  // Initialize all 24 hours to 0
-  const timeStats = {};
-  for (let hour = 0; hour < 24; hour++) {
-    const slot = `${hour}:00-${hour + 1}:00`;
-    timeStats[slot] = 0;
-  }
-
-  // Count bookings per slot
-  for (let booking of bookings) {
-    for (let slot of booking.time) {
-      timeStats[slot] = (timeStats[slot] || 0) + 1;
+    // Initialize all 24 slots to 0
+    const timeStats = {};
+    for (let hour = 0; hour < 24; hour++) {
+      const slot = `${hour}:00-${hour + 1}:00`;
+      timeStats[slot] = 0;
     }
-  }
 
-  return res.json({ timeStats });
+    // Count bookings per slot
+    for (let booking of bookings) {
+      for (let slot of booking.time) {
+        timeStats[slot] = (timeStats[slot] || 0) + 1;
+      }
+    }
+
+    return res.json({ timeStats });
+  } catch (error) {
+    console.error("Error fetching time stats:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
 };
