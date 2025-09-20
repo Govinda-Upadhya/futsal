@@ -10,7 +10,9 @@ import {
   getBooking,
   getDailyRevenueStats,
   getDailyTimeStats,
+  getMonthlyRevenueStats,
   getMonthlyStat,
+  getWeeklyRevenueStats,
   getWeeklyTimeStat,
   isLoggedIn,
   overall,
@@ -50,5 +52,8 @@ adminRoutes.get("/bookings/getDailyTimeStats", getDailyTimeStats);
 adminRoutes.get("/bookings/getWeeklyStats", getWeeklyTimeStat);
 adminRoutes.get("/bookings/getMonthlyStats", getMonthlyStat);
 adminRoutes.get("/bookings/getDailyRevenueStats", getDailyRevenueStats);
+adminRoutes.get("/bookings/getWeeklyRevenueStats", getWeeklyRevenueStats);
+
+adminRoutes.get("/bookings/getMonthlyRevenueStats", getMonthlyRevenueStats);
 
 export default adminRoutes;

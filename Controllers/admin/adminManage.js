@@ -437,3 +437,84 @@ export const getDailyRevenueStats = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+export const getWeeklyRevenueStats = async (req, res) => {
+  try {
+    const bookings = await BookingData.find({
+      status: "CONFIRMED",
+      adminId: req.admin.email,
+    });
+
+    // Days of the week
+    const daysOfWeek = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+
+    // Initialize all days with 0 revenue
+    const revenueStats = {};
+    daysOfWeek.forEach((day) => (revenueStats[day] = 0));
+
+    // Calculate revenue per day
+    for (let booking of bookings) {
+      if (!booking.amount || !booking.date) continue;
+
+      const bookingDate = new Date(booking.date);
+      const dayName = daysOfWeek[bookingDate.getDay()];
+
+      revenueStats[dayName] += booking.amount;
+    }
+
+    return res.json(revenueStats);
+  } catch (error) {
+    console.error("Error fetching weekly revenue stats:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+export const getMonthlyRevenueStats = async (req, res) => {
+  try {
+    const bookings = await BookingData.find({
+      status: "CONFIRMED",
+      adminId: req.admin.email,
+    });
+
+    // Months of the year
+    const monthsOfYear = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    // Initialize all months with 0 revenue
+    const revenueStats = {};
+    monthsOfYear.forEach((month) => (revenueStats[month] = 0));
+
+    // Calculate revenue per month
+    for (let booking of bookings) {
+      if (!booking.amount || !booking.date) continue;
+
+      const bookingDate = new Date(booking.date);
+      const monthName = monthsOfYear[bookingDate.getMonth()]; // 0 = Jan, 1 = Feb ...
+
+      revenueStats[monthName] += booking.amount;
+    }
+
+    return res.json(revenueStats);
+  } catch (error) {
+    console.error("Error fetching monthly revenue stats:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
