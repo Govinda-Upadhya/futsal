@@ -287,7 +287,7 @@ export const overall = async (req, res) => {
 };
 export const getDailyTimeStats = async (req, res) => {
   // Fetch all bookings for that date
-  const bookings = await Booking.find({
+  const bookings = await BookingData.find({
     date: {
       $gte: new Date(date.setHours(0, 0, 0, 0)), // start of day
       $lte: new Date(date.setHours(23, 59, 59, 999)), // end of day
