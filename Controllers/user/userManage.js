@@ -102,7 +102,7 @@ export const mailer = [
         bookingId: bookingId,
         date: booking.date,
         email: booking.email,
-        adminId: admin._id,
+        adminId: admin.email,
       });
       const attachment = {
         filename: file.originalname, // preserve user file name
