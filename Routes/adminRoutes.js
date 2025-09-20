@@ -8,6 +8,7 @@ import {
   deleteBooking,
   getAdmin,
   getBooking,
+  getDailyTimeStats,
   isLoggedIn,
   overall,
   rejectBooking,
@@ -42,5 +43,6 @@ adminRoutes.post("/bookings/acceptbooking", acceptBooking);
 adminRoutes.delete("/bookings/delete/:id", deleteBooking);
 adminRoutes.post("/bookings/rejectbooking", rejectBooking);
 adminRoutes.get("/bookings/overall", overall);
+adminRoutes.get("/bookings/getDailyTimeStats", getDailyTimeStats);
 
 export default adminRoutes;

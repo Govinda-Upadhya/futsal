@@ -278,9 +278,37 @@ export const overall = async (req, res) => {
       amount + (booking.status === "CONFIRMED" ? booking.amount : 0),
     0
   );
+
   return res.json({
     totalConfirmedBookings,
     totalPendingBookings,
     totalRevenue,
   });
+};
+export const getDailyTimeStats = async (req, res) => {
+  // Fetch all bookings for that date
+  const bookings = await Booking.find({
+    date: {
+      $gte: new Date(date.setHours(0, 0, 0, 0)), // start of day
+      $lte: new Date(date.setHours(23, 59, 59, 999)), // end of day
+    },
+    status: "CONFIRMED",
+    adminId: req.admin.email, // optional, if you only want confirmed ones
+  });
+
+  // Initialize all 24 hours to 0
+  const timeStats = {};
+  for (let hour = 0; hour < 24; hour++) {
+    const slot = `${hour}:00-${hour + 1}:00`;
+    timeStats[slot] = 0;
+  }
+
+  // Count bookings per slot
+  for (let booking of bookings) {
+    for (let slot of booking.time) {
+      timeStats[slot] = (timeStats[slot] || 0) + 1;
+    }
+  }
+
+  return res.json({ timeStats });
 };
