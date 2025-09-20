@@ -321,7 +321,7 @@ export const getDailyTimeStats = async (req, res) => {
     return res.status(500).json({ error });
   }
 };
-export const getWeeklyTimeStats = async (req, res) => {
+export const getWeeklyTimeStat = async (req, res) => {
   try {
     const bookings = await BookingData.find({
       status: "CONFIRMED",
