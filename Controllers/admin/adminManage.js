@@ -396,3 +396,44 @@ export const getMonthlyStat = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+export const getDailyRevenueStats = async (req, res) => {
+  try {
+    const bookings = await BookingData.find({
+      status: "CONFIRMED",
+      adminId: req.admin.email,
+    });
+
+    // Initialize all 24 slots with 0 revenue
+    const revenueStats = {};
+    for (let hour = 0; hour < 24; hour++) {
+      const startHour = String(hour).padStart(2, "0");
+      const endHour = String(hour + 1).padStart(2, "0");
+      const slot = `${startHour}:00-${endHour}:00`;
+      revenueStats[slot] = 0;
+    }
+
+    // Calculate revenue per slot
+    for (let booking of bookings) {
+      if (!booking.amount || !booking.time || booking.time.length === 0)
+        continue;
+
+      // Split amount equally across slots
+      const share = booking.amount / booking.time.length;
+
+      for (let t of booking.time) {
+        const slot = `${t.start}-${t.end}`;
+        if (revenueStats.hasOwnProperty(slot)) {
+          revenueStats[slot] += share;
+        } else {
+          // handle unexpected slots
+          revenueStats[slot] = share;
+        }
+      }
+    }
+
+    return res.json(revenueStats);
+  } catch (error) {
+    console.error("Error fetching daily revenue stats:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};

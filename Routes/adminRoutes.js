@@ -8,6 +8,7 @@ import {
   deleteBooking,
   getAdmin,
   getBooking,
+  getDailyRevenueStats,
   getDailyTimeStats,
   getMonthlyStat,
   getWeeklyTimeStat,
@@ -48,5 +49,6 @@ adminRoutes.get("/bookings/overall", overall);
 adminRoutes.get("/bookings/getDailyTimeStats", getDailyTimeStats);
 adminRoutes.get("/bookings/getWeeklyStats", getWeeklyTimeStat);
 adminRoutes.get("/bookings/getMonthlyStats", getMonthlyStat);
+adminRoutes.get("/bookings/getDailyRevenueStats", getDailyRevenueStats);
 
 export default adminRoutes;
