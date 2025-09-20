@@ -97,42 +97,39 @@ const bookingSchema = new mongoose.Schema(
   {
     email: {
       type: String,
-      required: [true],
+      required: true,
     },
-    name: {
-      type: String,
-    },
+    name: String,
     contact: {
       type: String,
       required: true,
     },
     screenshot: {
       type: Boolean,
+      default: false,
     },
-    amount: {
-      type: Number,
-    },
-    date: {
-      type: Date,
-    },
+    amount: Number,
+    date: Date,
     time: {
       type: [timeRangeSchema],
       required: true,
     },
-    bookingId: {
-      type: String,
-    },
+    bookingId: String,
     ground: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Ground",
-
       required: true,
     },
     status: {
       type: String,
       enum: ["CONFIRMED", "PENDING", "REJECTED"],
+      default: "PENDING",
     },
-    expiresAt: { type: Date, required: true },
+    expiresAt: {
+      type: Date,
+      required: true,
+      index: { expires: 0 }, // 🔑 tells MongoDB to expire at this time
+    },
   },
   { timestamps: true }
 );

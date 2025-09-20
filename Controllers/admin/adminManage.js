@@ -145,7 +145,6 @@ export const getBooking = async (req, res) => {
 
     const bookings = await Booking.find({
       ground: { $in: grounds.map((g) => g._id) },
-      screenshot: true,
     }).populate("ground", "name type");
 
     return res.json({ bookings });
