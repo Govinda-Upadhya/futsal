@@ -356,3 +356,43 @@ export const getWeeklyTimeStat = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+export const getMonthlyStat = async (req, res) => {
+  try {
+    const bookings = await BookingData.find({
+      status: "CONFIRMED",
+      adminId: req.admin.email,
+    });
+
+    // Months of the year
+    const monthsOfYear = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    // Initialize counts for each month
+    const timeStats = {};
+    monthsOfYear.forEach((month) => (timeStats[month] = 0));
+
+    // Count bookings per month
+    for (let booking of bookings) {
+      const bookingDate = new Date(booking.date); // assuming booking.date exists
+      const monthName = monthsOfYear[bookingDate.getMonth()]; // getMonth(): 0 = Jan, 11 = Dec
+      timeStats[monthName] += 1;
+    }
+
+    return res.json(timeStats);
+  } catch (error) {
+    console.error("Error fetching monthly stats:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};

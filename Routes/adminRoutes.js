@@ -9,6 +9,7 @@ import {
   getAdmin,
   getBooking,
   getDailyTimeStats,
+  getMonthlyStat,
   getWeeklyTimeStat,
   isLoggedIn,
   overall,
@@ -46,5 +47,6 @@ adminRoutes.post("/bookings/rejectbooking", rejectBooking);
 adminRoutes.get("/bookings/overall", overall);
 adminRoutes.get("/bookings/getDailyTimeStats", getDailyTimeStats);
 adminRoutes.get("/bookings/getWeeklyStats", getWeeklyTimeStat);
+adminRoutes.get("/bookings/getMonthlyStats", getMonthlyStat);
 
 export default adminRoutes;
