@@ -1,6 +1,6 @@
 import { APP_EMAIL, APP_PASS } from "../../config.js";
 import multer from "multer";
-import { Admin, Booking, Challenges, Ground } from "../../db.js";
+import { Admin, Booking, BookingData, Challenges, Ground } from "../../db.js";
 import nodemailer from "nodemailer";
 import { transporterMain } from "../../lib.js";
 import axios from "axios";
@@ -93,7 +93,17 @@ export const mailer = [
       );
       const ground = await Ground.findById(groundId).populate("admin", "_id");
       const admin = await Admin.findById(ground.admin._id);
-
+      const booking = await Booking.findById(bookingId);
+      const bookingData = await BookingData.create({
+        amount: booking.amount,
+        time: booking.time,
+        ground: groundId,
+        status: booking.status,
+        bookingId: bookingId,
+        date: booking.date,
+        email: booking.email,
+        adminId: admin._id,
+      });
       const attachment = {
         filename: file.originalname, // preserve user file name
         content: file.buffer, // use buffer (no base64 conversion)

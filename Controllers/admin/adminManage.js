@@ -1,4 +1,4 @@
-import { Admin, Booking, Ground } from "../../db.js";
+import { Admin, Booking, BookingData, Ground } from "../../db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
@@ -159,6 +159,12 @@ export const acceptBooking = async (req, res) => {
     const booking = await Booking.findByIdAndUpdate(bookingId, {
       status: "CONFIRMED",
     }).populate("ground", "name");
+    await BookingData.updateOne(
+      { bookingId: bookingId },
+      {
+        status: "CONFIRMED",
+      }
+    );
     if (!booking) {
       return res.status(404).json({ msg: "cannot find the booking" });
     }
@@ -254,4 +260,27 @@ export const changePasswordLink = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ msg: "Internal server" });
   }
+};
+
+export const overall = async (req, res) => {
+  const adminEmail = req.admin.email;
+  const bookingData = await BookingData.find({ email: adminEmail });
+  const totalConfirmedBookings = bookingData.reduce(
+    (count, booking) => count + (booking.status === "CONFIRMED" ? 1 : 0),
+    0
+  );
+  const totalPendingBookings = bookingData.reduce(
+    (count, booking) => count + (booking.status === "PENDING" ? 1 : 0),
+    0
+  );
+  const totalRevenue = bookingData.reduce(
+    (amount, booking) =>
+      amount + (booking.status === "CONFIRMED" ? booking.amount : 0),
+    0
+  );
+  return res.json({
+    totalConfirmedBookings,
+    totalPendingBookings,
+    totalRevenue,
+  });
 };

@@ -143,7 +143,24 @@ const challengeSchema = new mongoose.Schema({
   teamImage: String,
   description: String,
 });
+const bookingData = new mongoose.Schema({
+  date: Date,
+  ground: String,
+  time: {
+    type: [timeRangeSchema],
+  },
+  status: {
+    type: String,
+    enum: ["CONFIRMED", "PENDING", "REJECTED"],
+  },
+  email: String,
+  amount: Number,
+  bookingId: String,
+  adminId: String,
+});
 export const Admin = mongoose.model("Admin", adminSchema);
 export const Ground = mongoose.model("Ground", groundSchema);
 export const Booking = mongoose.model("Booking", bookingSchema);
 export const Challenges = mongoose.model("Challenges", challengeSchema);
+
+export const BookingData = mongoose.model("BookingData", bookingData);

@@ -9,6 +9,7 @@ import {
   getAdmin,
   getBooking,
   isLoggedIn,
+  overall,
   rejectBooking,
   updateAdmin,
 } from "../Controllers/admin/adminManage.js";
@@ -40,5 +41,6 @@ adminRoutes.get("/bookings", getBooking);
 adminRoutes.post("/bookings/acceptbooking", acceptBooking);
 adminRoutes.delete("/bookings/delete/:id", deleteBooking);
 adminRoutes.post("/bookings/rejectbooking", rejectBooking);
+adminRoutes.get("/bookings/overall", overall);
 
 export default adminRoutes;
