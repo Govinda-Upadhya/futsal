@@ -132,6 +132,7 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       enum: ["CONFIRMED", "PENDING", "REJECTED"],
     },
+    expiresAt: { type: Date, required: true },
   },
   { timestamps: true }
 );

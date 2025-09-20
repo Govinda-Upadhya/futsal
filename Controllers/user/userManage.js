@@ -47,6 +47,7 @@ export const bookGround = async (req, res) => {
       screenshot: false,
       ground: ground._id,
       amount: ground.pricePerHour * bookingdata.availability.length,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     });
     if (!bookings) {
       return res.status(400).json({ msg: "booking failed please try again" });
@@ -86,7 +87,10 @@ export const mailer = [
       if (!file) {
         return res.status(400).json({ error: "Screenshot is required" });
       }
-      await Booking.updateOne({ _id: bookingId }, { screenshot: true });
+      await Booking.updateOne(
+        { _id: bookingId },
+        { screenshot: true, $unset: { expiresAt: "" } }
+      );
       const ground = await Ground.findById(groundId).populate("admin", "_id");
       const admin = await Admin.findById(ground.admin._id);
 
