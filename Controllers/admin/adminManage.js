@@ -295,28 +295,29 @@ export const getDailyTimeStats = async (req, res) => {
     // Initialize all 24 slots to 0
     const timeStats = {};
     for (let hour = 0; hour < 24; hour++) {
-      let slot;
-      if (hour < 9) {
-        slot = `0${hour}:00-0${hour + 1}:00`;
-      } else if (hour == 9) {
-        slot = `0${hour}:00-${hour + 1}:00`;
-      } else {
-        slot = `${hour}:00-${hour + 1}:00`;
-      }
-
+      const startHour = String(hour).padStart(2, "0");
+      const endHour = String(hour + 1).padStart(2, "0");
+      const slot = `${startHour}:00-${endHour}:00`;
       timeStats[slot] = 0;
     }
 
     // Count bookings per slot
     for (let booking of bookings) {
-      for (let slot of booking.time) {
-        timeStats[slot] = (timeStats[slot] || 0) + 1;
+      for (let t of booking.time) {
+        // Convert object {start, end} to "HH:MM-HH:MM" string
+        const slot = `${t.start}-${t.end}`;
+        if (timeStats.hasOwnProperty(slot)) {
+          timeStats[slot] += 1;
+        } else {
+          // Optional: handle unexpected slots
+          timeStats[slot] = 1;
+        }
       }
     }
 
-    return res.json({ timeStats });
+    return res.json(timeStats); // <-- just return the object
   } catch (error) {
     console.error("Error fetching time stats:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error });
   }
 };
