@@ -1,5 +1,5 @@
 import { JWT_SUPER } from "../../config.js";
-import { BookingData, SuperAdmin } from "../../db.js";
+import { BookingData, Ground, SuperAdmin } from "../../db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 export const superadminSignUp = async (req, res) => {
@@ -72,6 +72,16 @@ export const totalConfirmedBooking = async (req, res) => {
     const count = await BookingData.countDocuments({ status: "CONFIRMED" });
     console.log(await BookingData.find({}));
     return res.json({ count });
+  } catch (error) {
+    console.error("Error fetching confirmed bookings:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+export const totalGrounds = async (req, res) => {
+  try {
+    const count = await Ground.countDocuments();
+
+    return res.json({ groundCount: count });
   } catch (error) {
     console.error("Error fetching confirmed bookings:", error);
     return res.status(500).json({ error: "Internal server error" });

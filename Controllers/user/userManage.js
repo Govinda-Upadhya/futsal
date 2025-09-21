@@ -288,3 +288,19 @@ export const cancelBooking = async (req, res) => {
   await Booking.deleteOne({ _id: id });
   return res.status(400).json({ msg: "Booking reservation canceled" });
 };
+export const sendFeedback = async (req, res) => {
+  const { rating, comment } = req.body;
+  await transporterMain.sendMail({
+    from: APP_EMAIL, // sender info
+    to: APP_EMAIL, // your app inbox
+    subject: "📩 New Feedback",
+    text: `Rating and comment send by the user`,
+    html: `
+        <h3>New Contact Form Submission</h3>
+        <p><b>Rating:</b> ${rating}</p>
+        <p><b>Comment:</b> ${comment}</p>
+       
+      `,
+  });
+  return res.status(200).json({ msg: "Feedback submitted" });
+};

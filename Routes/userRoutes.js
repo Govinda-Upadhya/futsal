@@ -11,6 +11,7 @@ import {
   mailer,
   seeDate,
   sendChallenge,
+  sendFeedback,
   viewGrounduser,
 } from "../Controllers/user/userManage.js";
 import { viewGrounds } from "../Controllers/ground/groundManage.js";
@@ -29,3 +30,4 @@ userRoutes.get("/getChallenge", sendChallenge);
 userRoutes.post("/acceptChallenge", acceptChallenge);
 userRoutes.post("/searchDate", seeDate);
 userRoutes.post("/contactus", contactUs);
+userRouter.post("/feedback", sendFeedback);
