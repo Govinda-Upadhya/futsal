@@ -145,13 +145,15 @@ export const getTimeBooked = async (req, res) => {
     ground: req.query.ground,
   });
 
-  if (bookings.length == 0) {
+  if (bookings.length === 0) {
     return res.json({ msg: "no booking" });
   }
+
   const time = [];
   for (const booking of bookings) {
-    time.push(booking.time);
+    time.push(...booking.time);
   }
+
   console.log(time);
   return res.json({ bookedTime: time });
 };
