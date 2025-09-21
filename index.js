@@ -5,15 +5,12 @@ import { db_url } from "./config.js";
 import cookieParser from "cookie-parser";
 import { userRoutes } from "./Routes/userRoutes.js";
 import cors from "cors";
+import { superAdminRoutes } from "./Routes/superAdmin.js";
 
 const app = e();
 export const base_delete_admin = `https://www.thanggo.com/api/photo/admin/delete`;
 export const base_delete_user = `https://www.thanggo.com/api/photo/user/delete`;
-export const allowedOrigin = [
-  "https://www.thanggo.com",
-  "https://thanggo.com",
-  "http://localhost:5173",
-];
+export const allowedOrigin = ["https://www.thanggo.com", "https://thanggo.com"];
 
 app.use(e.json({ limit: "10mb" }));
 app.use(e.urlencoded({ limit: "10mb", extended: true }));
@@ -28,6 +25,7 @@ app.use(
 app.use(cookieParser());
 app.use("/users", userRoutes);
 app.use("/admin", adminRoutes);
+app.use("/superAdmin", superAdminRoutes);
 
 async function main() {
   try {

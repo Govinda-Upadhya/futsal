@@ -16,7 +16,11 @@ const timeRangeSchema = new mongoose.Schema(
   },
   { _id: false }
 );
-
+const superAdminSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  password: { type: String, required: true },
+});
 const adminSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -158,9 +162,10 @@ const bookingData = new mongoose.Schema({
   bookingId: String,
   adminId: String,
 });
+
 export const Admin = mongoose.model("Admin", adminSchema);
 export const Ground = mongoose.model("Ground", groundSchema);
 export const Booking = mongoose.model("Booking", bookingSchema);
 export const Challenges = mongoose.model("Challenges", challengeSchema);
-
+export const SuperAdmin = mongoose.model("SuperAdmin", superAdminSchema);
 export const BookingData = mongoose.model("BookingData", bookingData);
