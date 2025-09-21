@@ -30,4 +30,4 @@ userRoutes.get("/getChallenge", sendChallenge);
 userRoutes.post("/acceptChallenge", acceptChallenge);
 userRoutes.post("/searchDate", seeDate);
 userRoutes.post("/contactus", contactUs);
-userRouter.post("/feedback", sendFeedback);
+userRoutes.post("/feedback", sendFeedback);
