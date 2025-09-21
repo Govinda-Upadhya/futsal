@@ -11,4 +11,3 @@ superAdminRoutes.post("/signup", superadminSignUp);
 superAdminRoutes.post("/signin", superadminSignIn);
 superAdminRoutes.use(superadminMiddleware);
 superAdminRoutes.get("/confirmedBookings", totalConfirmedBooking);
-superAdminRoutes.get("/totalGrounds", totalGrounds);
