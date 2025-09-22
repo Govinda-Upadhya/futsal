@@ -78,23 +78,47 @@ export const bookinginfo = async (req, res) => {
   });
 };
 export const mailer = [
-  upload.single("screenshot"), // 👈 expect "screenshot" field from FormData
+  upload.single("screenshot"), // expect "screenshot" field from FormData
   async (req, res) => {
     try {
       const { groundId, name, contactInfo, email, bookingId } = req.body;
-      const file = req.file; // 👈 screenshot file is here (in memory)
+      const file = req.file;
 
       if (!file) {
         return res.status(400).json({ error: "Screenshot is required" });
       }
+
+      // 1️⃣ Get booking details first
+      const booking = await Booking.findById(bookingId);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+
+      // compute expiresAt from last time slot
+      const lastSlotEnd = booking.time[booking.time.length - 1].end;
+      const expiresAt = new Date(`${booking.date}T${lastSlotEnd}:00`);
+
+      // 2️⃣ Update booking with screenshot + expiresAt
       await Booking.updateOne(
         { _id: bookingId },
-        { screenshot: true, $unset: { expiresAt: "" } }
+        {
+          screenshot: true,
+          $set: { expiresAt },
+        }
       );
-      const ground = await Ground.findById(groundId).populate("admin", "_id");
+
+      // 3️⃣ Get ground & admin
+      const ground = await Ground.findById(groundId).populate(
+        "admin",
+        "_id email"
+      );
+      if (!ground) {
+        return res.status(404).json({ error: "Ground not found" });
+      }
       const admin = await Admin.findById(ground.admin._id);
-      const booking = await Booking.findById(bookingId);
-      const bookingData = await BookingData.create({
+
+      // 4️⃣ Save booking data
+      await BookingData.create({
         amount: booking.amount,
         time: booking.time,
         ground: groundId,
@@ -104,22 +128,23 @@ export const mailer = [
         email: booking.email,
         adminId: admin.email,
       });
+
+      // 5️⃣ Prepare email attachment
       const attachment = {
-        filename: file.originalname, // preserve user file name
-        content: file.buffer, // use buffer (no base64 conversion)
-        contentType: file.mimetype, // e.g. image/png, image/jpeg
+        filename: file.originalname,
+        content: file.buffer,
+        contentType: file.mimetype,
       };
 
-      // Email to Admin
+      // 6️⃣ Send emails in parallel
       const adminMail = transporterMain.sendMail({
         from: APP_EMAIL,
         to: admin.email,
         subject: "Payment Screenshot",
-        text: `Payment screenshot from ${name}, contact: ${contactInfo}, ground: ${groundId}`,
+        text: `Payment screenshot from ${name}, contact: ${contactInfo}, ground: ${ground.name}`,
         attachments: [attachment],
       });
 
-      // Confirmation Email to User
       const userMail = transporterMain.sendMail({
         from: APP_EMAIL,
         to: email,
@@ -128,7 +153,6 @@ export const mailer = [
         attachments: [attachment],
       });
 
-      // run in parallel
       await Promise.all([adminMail, userMail]);
 
       res.json({ message: "Screenshot sent successfully" });
