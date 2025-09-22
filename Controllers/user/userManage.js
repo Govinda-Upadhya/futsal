@@ -87,10 +87,16 @@ export const mailer = [
       if (!file) {
         return res.status(400).json({ error: "Screenshot is required" });
       }
+      // compute expiresAt from last time slot
       const lastSlotEnd = booking.time[booking.time.length - 1].end;
-      const expiresAt = new Date(`${booking.date}T${lastSlotEnd}:00`);
 
-      // 2️⃣ Update booking with screenshot + expiresAt
+      const bookingDate = new Date(booking.date); // booking.date is stored in Mongo
+      const [hours, minutes] = lastSlotEnd.split(":").map(Number);
+      bookingDate.setHours(hours, minutes, 0, 0);
+
+      const expiresAt = bookingDate;
+
+      // Update booking
       await Booking.updateOne(
         { _id: bookingId },
         {
@@ -98,6 +104,7 @@ export const mailer = [
           $set: { expiresAt },
         }
       );
+
       const ground = await Ground.findById(groundId).populate("admin", "_id");
       const admin = await Admin.findById(ground.admin._id);
 
