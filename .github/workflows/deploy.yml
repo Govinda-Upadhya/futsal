@@ -4,12 +4,15 @@ on:
   push:
     branches:
       - main
+      - dev # 👈 also watch dev branch
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: checkout code
         uses: actions/checkout@v3
+
       - name: Execute remote ssh commands using ssh key
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -19,7 +22,16 @@ jobs:
           port: 22
           script: |
             export PATH=$PATH:/root/.nvm/versions/node/v22.19.0/bin
-            cd /root/app/futsal  # path where your app lives
-            git pull origin main
-            npm install
-            pm2 restart backend
+            if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+              echo "🚀 Deploying PRODUCTION..."
+              cd /root/app/futsal
+              git pull origin main
+              npm install
+              pm2 restart backend
+            elif [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+              echo "🚀 Deploying DEVELOPMENT..."
+              cd /root/dev/futsal
+              git pull origin dev
+              npm install
+              pm2 restart devbe
+            fi
