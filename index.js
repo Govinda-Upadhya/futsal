@@ -1,7 +1,7 @@
 import e from "express";
 import adminRoutes from "./Routes/adminRoutes.js";
 import mongoose from "mongoose";
-import { db_url } from "./config.js";
+import { db_url, PORT } from "./config.js";
 import cookieParser from "cookie-parser";
 import { userRoutes } from "./Routes/userRoutes.js";
 import cors from "cors";
@@ -31,8 +31,8 @@ async function main() {
   try {
     await mongoose.connect(db_url);
 
-    app.listen(3001, () => {
-      console.log("listening...");
+    app.listen(PORT, () => {
+      console.log("listening...", PORT);
     });
   } catch (error) {
     console.log(error);
