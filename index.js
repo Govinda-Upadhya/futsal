@@ -1,17 +1,22 @@
 import e from "express";
 import adminRoutes from "./Routes/adminRoutes.js";
 import mongoose from "mongoose";
-import { db_url, PORT } from "./config.js";
+import {
+  ALLOWED_ORIGINS,
+  BASE_DELETE_ADMIN,
+  BASE_DELETE_USER,
+  db_url,
+  PORT,
+} from "./config.js";
 import cookieParser from "cookie-parser";
 import { userRoutes } from "./Routes/userRoutes.js";
 import cors from "cors";
 import { superAdminRoutes } from "./Routes/superAdmin.js";
 
 const app = e();
-export const base_delete_admin = `https://www.thanggo.com/api/photo/admin/delete`;
-export const base_delete_user = `https://www.thanggo.com/api/photo/user/delete`;
-export const allowedOrigin = ["https://www.thanggo.com", "https://thanggo.com"];
-
+export const base_delete_admin = BASE_DELETE_ADMIN;
+export const base_delete_user = BASE_DELETE_USER;
+export const allowedOrigin = ALLOWED_ORIGINS;
 app.use(e.json({ limit: "10mb" }));
 app.use(e.urlencoded({ limit: "10mb", extended: true }));
 
