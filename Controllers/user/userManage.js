@@ -148,7 +148,9 @@ export const mailer = [
       res.json({ message: "Screenshot sent successfully" });
     } catch (err) {
       console.error(err);
-      res.status(500).json({ error: "Failed to send screenshot", err });
+      res
+        .status(500)
+        .json({ error: "Failed to send screenshot", err: err.message });
     }
   },
 ];
