@@ -2,7 +2,6 @@ import { APP_EMAIL, APP_PASS } from "../../config.js";
 import multer from "multer";
 import { Admin, Booking, BookingData, Challenges, Ground } from "../../db.js";
 import nodemailer from "nodemailer";
-import { transporterMain } from "../../lib.js";
 import axios from "axios";
 import { base_delete_user } from "../../index.js";
 const upload = multer({ storage: multer.memoryStorage() });
@@ -88,21 +87,18 @@ export const mailer = [
         return res.status(400).json({ error: "Screenshot is required" });
       }
       // compute expiresAt from last time slot
-      const lastSlotEnd = booking.time[booking.time.length - 1].end;
-
-      const bookingDate = new Date(booking.date); // booking.date is stored in Mongo
+      const lastSlotEnd = booking.time[booking.time.length - 1].end; // "08:30"
+      const bookingDate = new Date(booking.date);
       const [hours, minutes] = lastSlotEnd.split(":").map(Number);
-      bookingDate.setHours(hours, minutes, 0, 0);
+
+      // Use UTC methods to avoid timezone shift
+      bookingDate.setUTCHours(hours, minutes, 0, 0);
 
       const expiresAt = bookingDate;
 
-      // Update booking
       await Booking.updateOne(
         { _id: bookingId },
-        {
-          screenshot: true,
-          $set: { expiresAt },
-        }
+        { screenshot: true, $set: { expiresAt } }
       );
 
       const ground = await Ground.findById(groundId).populate("admin", "_id");
