@@ -72,6 +72,20 @@ export const bookGround = async (req, res) => {
       .json({ msg: "internal server error", err: error.message });
   }
 };
+export const resendOtp = async (req, res) => {
+  const { email, bookingId } = req.body;
+  const otp = generateOtp();
+  await redis.set(`otp:${email}`, otp, "EX", 60);
+  transporterMain.sendMail({
+    from: APP_EMAIL,
+    to: email,
+    subject: "OTP",
+    text: `Otp for your thanggo ground booking is ${otp}. it is valid for 1 minute.`,
+  });
+  return res
+    .status(200)
+    .json({ message: "OTP send successfully to your email" });
+};
 export const verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
   if (!email || !otp)
@@ -81,7 +95,7 @@ export const verifyOtp = async (req, res) => {
   if (!storedOtp)
     return res.status(400).json({ message: "OTP expired or not found" });
 
-  if (storedOtp === otp) {
+  if (storedOtp == otp) {
     await redis.del(`otp:${email}`); // remove OTP after verification
     return res.status(200).json({ message: "OTP verified successfully" });
   } else {

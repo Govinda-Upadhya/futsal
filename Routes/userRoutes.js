@@ -9,6 +9,7 @@ import {
   fetchGrounds,
   getTimeBooked,
   mailer,
+  resendOtp,
   seeDate,
   sendChallenge,
   sendFeedback,
@@ -34,3 +35,4 @@ userRoutes.post("/searchDate", seeDate);
 userRoutes.post("/contactus", contactUs);
 userRoutes.post("/feedback", sendFeedback);
 userRoutes.post("/verifyotp", otpLimiter, verifyOtp);
+userRoutes.post("/resendotp", resendOtp);
