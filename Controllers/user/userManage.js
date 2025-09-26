@@ -8,7 +8,7 @@ import { transporterMain } from "../admin/adminManage.js";
 import { generateOtp } from "../../lib.js";
 import Redis from "ioredis";
 import crypto from "crypto";
-const redis = new Redis();
+// const redis = new Redis();
 const upload = multer({ storage: multer.memoryStorage() });
 export const fetchGrounds = async (req, res) => {
   const grounds = await Ground.find({});
@@ -57,7 +57,7 @@ export const bookGround = async (req, res) => {
       return res.status(400).json({ msg: "booking failed please try again" });
     }
     const otp = generateOtp();
-    await redis.set(`otp:${email}`, otp, "EX", 60);
+    // await redis.set(`otp:${email}`, otp, "EX", 60);
     transporterMain.sendMail({
       from: APP_EMAIL,
       to: bookingdata.email,
