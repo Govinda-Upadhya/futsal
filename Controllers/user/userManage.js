@@ -69,7 +69,7 @@ export const bookGround = async (req, res) => {
     console.log(error);
     return res
       .status(500)
-      .json({ msg: "internal server error", err: err.message });
+      .json({ msg: "internal server error", err: error.message });
   }
 };
 
