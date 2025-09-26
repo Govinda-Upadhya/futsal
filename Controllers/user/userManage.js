@@ -57,7 +57,7 @@ export const bookGround = async (req, res) => {
       return res.status(400).json({ msg: "booking failed please try again" });
     }
     const otp = generateOtp();
-    await redis.set(`otp:${email}`, otp, "EX", 60);
+    await redis.set(`otp:${bookingdata.email}`, otp, "EX", 60);
     transporterMain.sendMail({
       from: APP_EMAIL,
       to: bookingdata.email,
