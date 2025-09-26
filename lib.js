@@ -14,3 +14,4 @@ export const transporterMain = nodemailer.createTransport({
     rejectUnauthorized: false,
   },
 });
+export const generateOtp = () => crypto.randomInt(100000, 999999).toString();

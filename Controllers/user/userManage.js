@@ -5,6 +5,10 @@ import nodemailer from "nodemailer";
 import axios from "axios";
 import { base_delete_user } from "../../index.js";
 import { transporterMain } from "../admin/adminManage.js";
+import { generateOtp } from "../../lib.js";
+import Redis from "ioredis";
+import crypto from "crypto";
+const redis = new Redis();
 const upload = multer({ storage: multer.memoryStorage() });
 export const fetchGrounds = async (req, res) => {
   const grounds = await Ground.find({});
@@ -35,7 +39,7 @@ export const bookGround = async (req, res) => {
   }
 
   const bookingdata = await req.body.data;
-  console.log(bookingdata);
+
   try {
     const bookings = await Booking.create({
       date: bookingdata.date,
@@ -52,6 +56,14 @@ export const bookGround = async (req, res) => {
     if (!bookings) {
       return res.status(400).json({ msg: "booking failed please try again" });
     }
+    const otp = generateOtp();
+    await redis.set(`otp:${email}`, otp, "EX", 60);
+    transporterMain.sendMail({
+      from: APP_EMAIL,
+      to: bookingdata.email,
+      subject: "OTP",
+      text: `Otp for your thanggo ground booking is ${otp}. it is valid for 1 minute.`,
+    });
     return res.json({ msg: "booking info", booking_id: bookings._id });
   } catch (error) {
     console.log(error);
