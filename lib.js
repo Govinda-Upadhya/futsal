@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 import { APP_EMAIL, APP_PASS } from "./config.js";
+import rateLimit from "express-rate-limit";
 export function toMinutes(str) {
   const [h, m] = str.split(":").map(Number);
   return h * 60 + m;
