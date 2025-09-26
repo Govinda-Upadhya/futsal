@@ -67,7 +67,9 @@ export const bookGround = async (req, res) => {
     return res.json({ msg: "booking info", booking_id: bookings._id });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ msg: "internal server error" });
+    return res
+      .status(500)
+      .json({ msg: "internal server error", err: err.message });
   }
 };
 
