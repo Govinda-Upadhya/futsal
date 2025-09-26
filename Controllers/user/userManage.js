@@ -72,7 +72,22 @@ export const bookGround = async (req, res) => {
       .json({ msg: "internal server error", err: error.message });
   }
 };
+export const verifyOtp = async (req, res) => {
+  const { email, otp } = req.body;
+  if (!email || !otp)
+    return res.status(400).json({ message: "Email and OTP required" });
 
+  const storedOtp = await redis.get(`otp:${email}`);
+  if (!storedOtp)
+    return res.status(400).json({ message: "OTP expired or not found" });
+
+  if (storedOtp === otp) {
+    await redis.del(`otp:${email}`); // remove OTP after verification
+    return res.status(200).json({ message: "OTP verified successfully" });
+  } else {
+    return res.status(400).json({ message: "Invalid OTP" });
+  }
+};
 export const bookinginfo = async (req, res) => {
   const id = req.params.id;
   console.log(id);
