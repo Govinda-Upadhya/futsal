@@ -73,7 +73,7 @@ export const bookGround = async (req, res) => {
   }
 };
 export const resendOtp = async (req, res) => {
-  const { email, bookingId } = req.body;
+  const { email } = req.body;
   const otp = generateOtp();
   await redis.set(`otp:${email}`, otp, "EX", 90);
   transporterMain.sendMail({
