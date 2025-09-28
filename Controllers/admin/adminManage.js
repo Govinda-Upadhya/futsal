@@ -240,7 +240,7 @@ export const adminBooking = async (req, res) => {
       subject: "Booking confirmed",
       text: `dear ${booking.name} your booking for ground ${booking.ground.name} on ${formattedDate} has been confirmed. please be on time and have fun`,
     });
-    return res.json({ msg: "booking info", booking_id: bookings._id });
+    return res.json({ msg: "booking info" });
   } catch (error) {
     console.log(error);
     return res
