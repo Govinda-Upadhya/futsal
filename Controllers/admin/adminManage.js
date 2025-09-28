@@ -188,6 +188,80 @@ export const acceptBooking = async (req, res) => {
     res.status(500).json({ error: "Failed to send screenshot" });
   }
 };
+export const adminBooking = async (req, res) => {
+  const id = req.params.id;
+
+  const ground = await Ground.findById(id);
+  if (!ground) {
+    return res.json({ msg: "Ground doesnt exists" });
+  }
+
+  const bookingdata = await req.body.data;
+
+  try {
+    const booking = await Booking.create({
+      date: bookingdata.date,
+      name: bookingdata.name,
+      email: bookingdata.email,
+      contact: bookingdata.phone,
+      time: bookingdata.availability,
+      status: "CONFIRM",
+      screenshot: true,
+      ground: ground._id,
+      amount: ground.pricePerHour * bookingdata.availability.length,
+      expiresAt: new Date(Date.now() + 6 * 60 * 1000),
+    });
+    const lastSlotEnd = booking.time[booking.time.length - 1].end; // "08:30"
+    const bookingDate = new Date(booking.date);
+    const [hours, minutes] = lastSlotEnd.split(":").map(Number);
+
+    // Use UTC methods to avoid timezone shift
+    bookingDate.setUTCHours(hours, minutes, 0, 0);
+
+    const expiresAt = bookingDate;
+
+    await Booking.updateOne(
+      { _id: booking._id },
+      { screenshot: true, $set: { expiresAt } }
+    );
+
+    if (!booking) {
+      return res.status(400).json({ msg: "booking failed please try again" });
+    }
+    const formattedDate = new Date(booking.date).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+    await transporterMain.sendMail({
+      from: APP_EMAIL,
+      to: booking.email,
+      subject: "Booking confirmed",
+      text: `dear ${booking.name} your booking for ground ${booking.ground.name} on ${formattedDate} has been confirmed. please be on time and have fun`,
+    });
+    return res.json({ msg: "booking info", booking_id: bookings._id });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ msg: "internal server error", err: error.message });
+  }
+};
+export const resendOtp = async (req, res) => {
+  const { email } = req.body;
+  const otp = generateOtp();
+  await redis.set(`otp:${email}`, otp, "EX", 90);
+  transporterMain.sendMail({
+    from: APP_EMAIL,
+    to: email,
+    subject: "OTP",
+    text: `Otp for your thanggo ground booking is ${otp}. it is valid for 1 minute.`,
+  });
+  return res
+    .status(200)
+    .json({ message: "OTP send successfully to your email" });
+};
 
 export const rejectBooking = async (req, res) => {
   const info = req.body;
