@@ -205,7 +205,7 @@ export const adminBooking = async (req, res) => {
       email: bookingdata.email,
       contact: bookingdata.phone,
       time: bookingdata.availability,
-      status: "CONFIRM",
+      status: "CONFIRMED",
       screenshot: true,
       ground: ground._id,
       amount: ground.pricePerHour * bookingdata.availability.length,
