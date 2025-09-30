@@ -53,6 +53,7 @@ export const bookGround = async (req, res) => {
       amount: ground.pricePerHour * bookingdata.availability.length,
       expiresAt: new Date(Date.now() + 6 * 60 * 1000),
     });
+    console.log("booking", bookings);
     if (!bookings) {
       return res.status(400).json({ msg: "booking failed please try again" });
     }
