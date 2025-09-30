@@ -64,7 +64,7 @@ export const bookGround = async (req, res) => {
       subject: "OTP",
       text: `Otp for your thanggo ground booking is ${otp}. it is valid for 1 minute.`,
     });
-    return res.json({ msg: "booking info", booking_id: bookings._id });
+    return res.json({ msg: "bookign done" });
   } catch (error) {
     console.log(error);
     return res
@@ -90,14 +90,14 @@ export const verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
   if (!email || !otp)
     return res.status(400).json({ message: "Make a booking first" });
-
+  const booking = await Booking.findOne({ email: email });
   const storedOtp = await redis.get(`otp:${email}`);
   if (!storedOtp)
     return res.status(400).json({ message: "OTP expired or not found" });
 
   if (storedOtp == otp) {
     await redis.del(`otp:${email}`); // remove OTP after verification
-    return res.status(200).json({ message: "OTP verified successfully" });
+    return res.status(200).json({ id: booking._id });
   } else {
     return res.status(400).json({ message: "Invalid OTP" });
   }
