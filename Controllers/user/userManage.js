@@ -106,6 +106,7 @@ export const bookinginfo = async (req, res) => {
   const id = req.params.id;
   console.log(id);
   const info = await Booking.findById(id).populate("ground", "name _id");
+  console.log("info", info);
   const ground = await Ground.findById(info.ground._id).populate(
     "admin",
     "scanner"
