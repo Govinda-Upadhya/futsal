@@ -53,10 +53,16 @@ export const bookGround = async (req, res) => {
       amount: ground.pricePerHour * bookingdata.availability.length,
       expiresAt: new Date(Date.now() + 6 * 60 * 1000),
     });
+    console.log("booking", bookings);
     if (!bookings) {
       return res.status(400).json({ msg: "booking failed please try again" });
     }
     const otp = generateOtp();
+    const fullDetail = {
+      otp,
+      groundId: ground._id,
+      screenshoot: false,
+    };
     await redis.set(`otp:${bookingdata.email}`, otp, "EX", 90);
     transporterMain.sendMail({
       from: APP_EMAIL,
@@ -64,7 +70,7 @@ export const bookGround = async (req, res) => {
       subject: "OTP",
       text: `Otp for your thanggo ground booking is ${otp}. it is valid for 1 minute.`,
     });
-    return res.json({ msg: "bookign done" });
+    return res.json({ msg: "bookign done", booking_id: bookings._id });
   } catch (error) {
     console.log(error);
     return res
@@ -87,10 +93,10 @@ export const resendOtp = async (req, res) => {
     .json({ message: "OTP send successfully to your email" });
 };
 export const verifyOtp = async (req, res) => {
-  const { email, otp } = req.body;
+  const { email, otp, id } = req.body;
   if (!email || !otp)
     return res.status(400).json({ message: "Make a booking first" });
-  const booking = await Booking.findOne({ email: email });
+  const booking = await Booking.findOne({ _id: id });
   const storedOtp = await redis.get(`otp:${email}`);
   if (!storedOtp)
     return res.status(400).json({ message: "OTP expired or not found" });
@@ -106,7 +112,7 @@ export const bookinginfo = async (req, res) => {
   const id = req.params.id;
   console.log(id);
   const info = await Booking.findById(id).populate("ground", "name _id");
-  console.log("info at 109", info);
+
   const ground = await Ground.findById(info.ground._id).populate(
     "admin",
     "scanner"
