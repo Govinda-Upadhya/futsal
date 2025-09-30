@@ -9,12 +9,15 @@ import {
   fetchGrounds,
   getTimeBooked,
   mailer,
+  resendOtp,
   seeDate,
   sendChallenge,
   sendFeedback,
+  verifyOtp,
   viewGrounduser,
 } from "../Controllers/user/userManage.js";
 import { viewGrounds } from "../Controllers/ground/groundManage.js";
+import { otpLimiter } from "../lib.js";
 
 export const userRoutes = Router();
 
@@ -31,3 +34,5 @@ userRoutes.post("/acceptChallenge", acceptChallenge);
 userRoutes.post("/searchDate", seeDate);
 userRoutes.post("/contactus", contactUs);
 userRoutes.post("/feedback", sendFeedback);
+userRoutes.post("/verifyotp", otpLimiter, verifyOtp);
+userRoutes.post("/resendotp", resendOtp);

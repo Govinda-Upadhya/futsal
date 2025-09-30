@@ -2,9 +2,13 @@ import { APP_EMAIL, APP_PASS } from "../../config.js";
 import multer from "multer";
 import { Admin, Booking, BookingData, Challenges, Ground } from "../../db.js";
 import nodemailer from "nodemailer";
-import { transporterMain } from "../../lib.js";
 import axios from "axios";
 import { base_delete_user } from "../../index.js";
+import { transporterMain } from "../admin/adminManage.js";
+import { generateOtp } from "../../lib.js";
+import Redis from "ioredis";
+
+const redis = new Redis();
 const upload = multer({ storage: multer.memoryStorage() });
 export const fetchGrounds = async (req, res) => {
   const grounds = await Ground.find({});
@@ -35,7 +39,7 @@ export const bookGround = async (req, res) => {
   }
 
   const bookingdata = await req.body.data;
-  console.log(bookingdata);
+
   try {
     const bookings = await Booking.create({
       date: bookingdata.date,
@@ -47,18 +51,57 @@ export const bookGround = async (req, res) => {
       screenshot: false,
       ground: ground._id,
       amount: ground.pricePerHour * bookingdata.availability.length,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      expiresAt: new Date(Date.now() + 6 * 60 * 1000),
     });
     if (!bookings) {
       return res.status(400).json({ msg: "booking failed please try again" });
     }
-    return res.json({ msg: "booking info", booking_id: bookings._id });
+    const otp = generateOtp();
+    await redis.set(`otp:${bookingdata.email}`, otp, "EX", 90);
+    transporterMain.sendMail({
+      from: APP_EMAIL,
+      to: bookingdata.email,
+      subject: "OTP",
+      text: `Otp for your thanggo ground booking is ${otp}. it is valid for 1 minute.`,
+    });
+    return res.json({ msg: "bookign done" });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ msg: "internal server error" });
+    return res
+      .status(500)
+      .json({ msg: "internal server error", err: error.message });
   }
 };
+export const resendOtp = async (req, res) => {
+  const { email } = req.body;
+  const otp = generateOtp();
+  await redis.set(`otp:${email}`, otp, "EX", 90);
+  transporterMain.sendMail({
+    from: APP_EMAIL,
+    to: email,
+    subject: "OTP",
+    text: `Otp for your thanggo ground booking is ${otp}. it is valid for 1 minute.`,
+  });
+  return res
+    .status(200)
+    .json({ message: "OTP send successfully to your email" });
+};
+export const verifyOtp = async (req, res) => {
+  const { email, otp } = req.body;
+  if (!email || !otp)
+    return res.status(400).json({ message: "Make a booking first" });
+  const booking = await Booking.findOne({ email: email });
+  const storedOtp = await redis.get(`otp:${email}`);
+  if (!storedOtp)
+    return res.status(400).json({ message: "OTP expired or not found" });
 
+  if (storedOtp == otp) {
+    await redis.del(`otp:${email}`); // remove OTP after verification
+    return res.status(200).json({ id: booking._id });
+  } else {
+    return res.status(400).json({ message: "Invalid OTP" });
+  }
+};
 export const bookinginfo = async (req, res) => {
   const id = req.params.id;
   console.log(id);
@@ -88,21 +131,18 @@ export const mailer = [
         return res.status(400).json({ error: "Screenshot is required" });
       }
       // compute expiresAt from last time slot
-      const lastSlotEnd = booking.time[booking.time.length - 1].end;
-
-      const bookingDate = new Date(booking.date); // booking.date is stored in Mongo
+      const lastSlotEnd = booking.time[booking.time.length - 1].end; // "08:30"
+      const bookingDate = new Date(booking.date);
       const [hours, minutes] = lastSlotEnd.split(":").map(Number);
-      bookingDate.setHours(hours, minutes, 0, 0);
+
+      // Use UTC methods to avoid timezone shift
+      bookingDate.setUTCHours(hours, minutes, 0, 0);
 
       const expiresAt = bookingDate;
 
-      // Update booking
       await Booking.updateOne(
         { _id: bookingId },
-        {
-          screenshot: true,
-          $set: { expiresAt },
-        }
+        { screenshot: true, $set: { expiresAt } }
       );
 
       const ground = await Ground.findById(groundId).populate("admin", "_id");
@@ -149,7 +189,9 @@ export const mailer = [
       res.json({ message: "Screenshot sent successfully" });
     } catch (err) {
       console.error(err);
-      res.status(500).json({ error: "Failed to send screenshot", err });
+      res
+        .status(500)
+        .json({ error: "Failed to send screenshot", err: err.message });
     }
   },
 ];

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   acceptBooking,
+  adminBooking,
   adminSignIn,
   adminSignUp,
   changePassword,
@@ -53,7 +54,6 @@ adminRoutes.get("/bookings/getWeeklyStats", getWeeklyTimeStat);
 adminRoutes.get("/bookings/getMonthlyStats", getMonthlyStat);
 adminRoutes.get("/bookings/getDailyRevenueStats", getDailyRevenueStats);
 adminRoutes.get("/bookings/getWeeklyRevenueStats", getWeeklyRevenueStats);
-
 adminRoutes.get("/bookings/getMonthlyRevenueStats", getMonthlyRevenueStats);
-
+adminRoutes.post("/bookingOffline/:id", adminBooking);
 export default adminRoutes;
