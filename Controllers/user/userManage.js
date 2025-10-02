@@ -8,7 +8,10 @@ import { transporterMain } from "../admin/adminManage.js";
 import { generateOtp } from "../../lib.js";
 import Redis from "ioredis";
 
-const redis = new Redis();
+const redis = new Redis({
+  host: "127.0.0.1", // or "localhost"
+  port: 6379,
+});
 const upload = multer({ storage: multer.memoryStorage() });
 export const fetchGrounds = async (req, res) => {
   const grounds = await Ground.find({});
