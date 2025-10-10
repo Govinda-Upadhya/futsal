@@ -13,6 +13,7 @@ import {
   seeDate,
   sendChallenge,
   sendFeedback,
+  verifyChallengesOtp,
   verifyOtp,
   viewGrounduser,
 } from "../Controllers/user/userManage.js";
@@ -35,4 +36,5 @@ userRoutes.post("/searchDate", seeDate);
 userRoutes.post("/contactus", contactUs);
 userRoutes.post("/feedback", sendFeedback);
 userRoutes.post("/verifyotp", otpLimiter, verifyOtp);
+userRoutes.post("/verifychallengeotp", otpLimiter, verifyChallengesOtp);
 userRoutes.post("/resendotp", resendOtp);
