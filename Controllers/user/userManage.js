@@ -111,6 +111,22 @@ export const verifyOtp = async (req, res) => {
     return res.status(400).json({ message: "Invalid OTP" });
   }
 };
+export const verifyChallengesOtp = async (req, res) => {
+  const { email, otp } = req.body;
+  if (!email || !otp)
+    return res.status(400).json({ message: "Make a challenge first" });
+
+  const storedOtp = await redis.get(`otp:${email}`);
+  if (!storedOtp)
+    return res.status(400).json({ message: "OTP expired or not found" });
+
+  if (storedOtp == otp) {
+    await redis.del(`otp:${email}`); // remove OTP after verification
+    return res.status(200).json({ msg: "done" });
+  } else {
+    return res.status(400).json({ message: "Invalid OTP" });
+  }
+};
 export const bookinginfo = async (req, res) => {
   const id = req.params.id;
   console.log(id);
@@ -227,13 +243,13 @@ export const getTimeBooked = async (req, res) => {
 
 export const createChallenge = async (req, res) => {
   const challengeInfo = req.body;
-  console.log(challengeInfo);
+
   const { teamName, availability, email, members, sport, description } =
     challengeInfo;
   const imageUrl = challengeInfo.imageUrl;
 
   try {
-    await Challenges.create({
+    let data = await Challenges.create({
       teamImage: imageUrl,
       teamName: teamName,
       availability: availability,
@@ -241,6 +257,16 @@ export const createChallenge = async (req, res) => {
       email,
       members,
       description,
+      valid: false,
+    });
+    const otp = generateOtp();
+
+    await redis.set(`otp:${data.email}`, otp, "EX", 90);
+    transporterMain.sendMail({
+      from: APP_EMAIL,
+      to: data.email,
+      subject: "OTP",
+      text: `Otp for your thanggo challenge creation is ${otp}. it is valid for 1 minute.`,
     });
     return res.status(200).json({ msg: "done" });
   } catch (error) {

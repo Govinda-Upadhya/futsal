@@ -146,6 +146,7 @@ const challengeSchema = new mongoose.Schema({
   sport: String,
   teamImage: String,
   description: String,
+  valid: Boolean,
 });
 const bookingData = new mongoose.Schema({
   date: Date,
