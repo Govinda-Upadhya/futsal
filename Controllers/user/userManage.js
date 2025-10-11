@@ -302,7 +302,7 @@ export const acceptChallenge = async (req, res) => {
     subject: "Challenge accepted",
     text: `Your challenge has been accepted by ${data.name} please contact the accepter on phone ${data.phone} or email ${data.email}`,
   });
-  await axios.delete(`https://www.thanggo.com/api/photo/user/delete`, {
+  await axios.delete(`${base_delete_user}`, {
     data: { url: challenge.teamImage },
   });
 
