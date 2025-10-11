@@ -112,7 +112,7 @@ export const verifyOtp = async (req, res) => {
   }
 };
 export const verifyChallengesOtp = async (req, res) => {
-  const { email, otp } = req.body;
+  const { email, otp, id } = req.body;
   if (!email || !otp)
     return res.status(400).json({ message: "Make a challenge first" });
 
@@ -121,6 +121,12 @@ export const verifyChallengesOtp = async (req, res) => {
     return res.status(400).json({ message: "OTP expired or not found" });
 
   if (storedOtp == otp) {
+    const challenge = await Challenges.findByIdAndUpdate(
+      id,
+      { valid: true },
+      { new: true } // returns the updated document
+    );
+
     await redis.del(`otp:${email}`); // remove OTP after verification
     return res.status(200).json({ msg: "done" });
   } else {
@@ -268,7 +274,7 @@ export const createChallenge = async (req, res) => {
       subject: "OTP",
       text: `Otp for your thanggo challenge creation is ${otp}. it is valid for 1 minute.`,
     });
-    return res.status(200).json({ msg: "done" });
+    return res.status(200).json({ msg: "done", id: data._id });
   } catch (error) {
     console.log(error);
     return res.status(400).json({ msg: "not done" });
@@ -276,7 +282,7 @@ export const createChallenge = async (req, res) => {
 };
 
 export const sendChallenge = async (req, res) => {
-  let challenges = await Challenges.find({});
+  let challenges = await Challenges.find({ valid: true });
 
   return res.json({ challenges });
 };
