@@ -42,7 +42,15 @@ export const bookGround = async (req, res) => {
   }
 
   const bookingdata = await req.body.data;
-
+  const times = bookingdata.availability;
+  let total = 0;
+  for (const time of times) {
+    if (parseInt(time.start.replace(":", ""), 10) >= 1800) {
+      total += ground.nightprice;
+    } else {
+      total += ground.pricePerHour;
+    }
+  }
   try {
     const bookings = await Booking.create({
       date: bookingdata.date,
@@ -53,7 +61,7 @@ export const bookGround = async (req, res) => {
       status: "PENDING",
       screenshot: false,
       ground: ground._id,
-      amount: ground.pricePerHour * bookingdata.availability.length,
+      amount: total,
       expiresAt: new Date(Date.now() + 6 * 60 * 1000),
     });
     console.log("booking", bookings);
