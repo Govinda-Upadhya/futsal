@@ -68,7 +68,7 @@ export const createGround = async (req, res) => {
       admin: admin._id,
       pricePerHour: parseInt(pricePerHour),
       nightprice,
-      nightime: nighttime,
+      nightime: parseInt(nighttime),
       features: features,
       rating: rating,
       type: type,
@@ -78,7 +78,7 @@ export const createGround = async (req, res) => {
     return res.send("ground created");
   } catch (error) {
     console.log(error);
-    return res.send("ground couldnt be created");
+    return res.status(400).send("ground couldnt be created");
   }
 };
 
