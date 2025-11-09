@@ -74,8 +74,9 @@ const groundSchema = new mongoose.Schema(
     },
     nightprice: {
       type: Number,
-      required: [true, "Price per hour is required"],
-      default: pricePerHour,
+      default: function () {
+        return this.pricePerHour; // 👈 access current document’s pricePerHour
+      },
     },
     features: {
       type: [String],
