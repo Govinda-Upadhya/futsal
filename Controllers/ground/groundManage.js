@@ -111,6 +111,7 @@ export const updateGround = async (req, res) => {
     removedImages,
     newImageUrls,
     pricePerHour,
+    pricenight,
   } = req.body;
 
   try {
@@ -171,6 +172,7 @@ export const updateGround = async (req, res) => {
           image: newImages,
           location,
           pricePerHour,
+          pricenight,
           availability,
           description,
           capacity,
@@ -188,6 +190,7 @@ export const updateGround = async (req, res) => {
           location,
           availability,
           pricePerHour,
+          pricenight,
           description,
           capacity,
           features,
