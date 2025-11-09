@@ -15,6 +15,7 @@ export const createGround = async (req, res) => {
     type,
     features,
     pricePerHour,
+    nightprice,
     rating,
     location,
   } = req.body;
@@ -65,9 +66,11 @@ export const createGround = async (req, res) => {
       image: image,
       admin: admin._id,
       pricePerHour: parseInt(pricePerHour),
+      nightprice,
       features: features,
       rating: rating,
       type: type,
+
       location: location,
     });
     return res.send("ground created");

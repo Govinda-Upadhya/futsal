@@ -72,7 +72,11 @@ const groundSchema = new mongoose.Schema(
       type: Number,
       required: [true, "Price per hour is required"],
     },
-
+    nightprice: {
+      type: Number,
+      required: [true, "Price per hour is required"],
+      default: pricePerHour,
+    },
     features: {
       type: [String],
       default: [],
