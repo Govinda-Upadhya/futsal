@@ -45,7 +45,10 @@ export const bookGround = async (req, res) => {
   const times = bookingdata.availability;
   let total = 0;
   for (const time of times) {
-    if (parseInt(time.start.replace(":", ""), 10) >= ground.nightime * 100) {
+    if (
+      parseInt(time.start.replace(":", ""), 10) >=
+      parseInt(ground.nightime.replace(":", ""), 10)
+    ) {
       total += ground.nightprice;
     } else {
       total += ground.pricePerHour;

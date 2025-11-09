@@ -68,7 +68,7 @@ export const createGround = async (req, res) => {
       admin: admin._id,
       pricePerHour: parseInt(pricePerHour),
       nightprice,
-      nightime: parseInt(nightime),
+      nightime: nightime,
       features: features,
       rating: rating,
       type: type,
@@ -182,7 +182,7 @@ export const updateGround = async (req, res) => {
           description,
           capacity,
           features,
-          nightime: nightime,
+          nightime,
         },
         { new: true, runValidators: true }
       );
@@ -200,7 +200,7 @@ export const updateGround = async (req, res) => {
           description,
           capacity,
           features,
-          nightime: nightime,
+          nightime,
         },
         { new: true, runValidators: true }
       );

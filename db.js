@@ -79,8 +79,8 @@ const groundSchema = new mongoose.Schema(
       },
     },
     nightime: {
-      type: Number,
-      default: 18,
+      type: String,
+      default: "18:00",
     },
     features: {
       type: [String],
