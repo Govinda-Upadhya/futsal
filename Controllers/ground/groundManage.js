@@ -78,7 +78,7 @@ export const createGround = async (req, res) => {
     return res.send("ground created");
   } catch (error) {
     console.log(error);
-    return res.status(400).send("ground couldnt be created");
+    return res.status(400).json({ msg: "ground couldnt be created", error });
   }
 };
 
