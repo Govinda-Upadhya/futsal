@@ -36,6 +36,8 @@ export const viewGrounduser = async (req, res) => {
 export const bookGround = async (req, res) => {
   const id = req.params.id;
   console.log("id", id);
+  const userDate = new Date(req.body.date);
+  const day = userDate.getDay();
   const ground = await Ground.findById(id);
   if (!ground) {
     return res.json({ msg: "Ground doesnt exists" });
@@ -49,9 +51,17 @@ export const bookGround = async (req, res) => {
       parseInt(time.start.replace(":", ""), 10) >=
       parseInt(ground.nightime.replace(":", ""), 10)
     ) {
-      total += ground.nightprice;
+      if (day == 0 || day == 6) {
+        total += ground.weekendNightPrice;
+      } else {
+        total += ground.nightprice;
+      }
     } else {
-      total += ground.pricePerHour;
+      if (day == 0 || day == 6) {
+        total += ground.weekendNightPrice;
+      } else {
+        total += ground.nightprice;
+      }
     }
   }
   try {

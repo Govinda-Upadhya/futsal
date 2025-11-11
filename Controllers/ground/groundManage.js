@@ -120,6 +120,8 @@ export const updateGround = async (req, res) => {
     newImageUrls,
     pricePerHour,
     nightprice,
+    weekendNightPrice,
+    weekendPrice,
   } = req.body;
 
   try {
@@ -186,6 +188,8 @@ export const updateGround = async (req, res) => {
           capacity,
           features,
           nightime,
+          weekendNightPrice,
+          weekendPrice,
         },
         { new: true, runValidators: true }
       );
@@ -204,6 +208,8 @@ export const updateGround = async (req, res) => {
           capacity,
           features,
           nightime,
+          weekendPrice,
+          weekendNightPrice,
         },
         { new: true, runValidators: true }
       );
