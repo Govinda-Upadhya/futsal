@@ -78,6 +78,18 @@ const groundSchema = new mongoose.Schema(
         return this.pricePerHour; // 👈 access current document’s pricePerHour
       },
     },
+    weekendPrice: {
+      type: Number,
+      default: function () {
+        return this.pricePerHour;
+      },
+    },
+    weekendNightPrice: {
+      type: Number,
+      default: function () {
+        return this.pricePerHour;
+      },
+    },
     nightime: {
       type: String,
       default: "18:00",

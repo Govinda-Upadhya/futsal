@@ -16,6 +16,8 @@ export const createGround = async (req, res) => {
     features,
     pricePerHour,
     nightprice,
+    weekendPrice,
+    weekendNightPrice,
     rating,
     location,
     nightime,
@@ -68,11 +70,12 @@ export const createGround = async (req, res) => {
       admin: admin._id,
       pricePerHour: parseInt(pricePerHour),
       nightprice,
+      weekendNightPrice,
+      weekendPrice,
       nightime: nightime,
       features: features,
       rating: rating,
       type: type,
-
       location: location,
     });
     return res.send("ground created");
