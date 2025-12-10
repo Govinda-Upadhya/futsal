@@ -220,8 +220,8 @@ export const mailer = [
         bfs_txnCurrency: "BTN",
         bfs_txnAmount: Number(booking.amount).toFixed(2),
         bfs_remitterEmail: booking.email,
-        bfs_paymentDesc: encodeURIComponent("Sample Product Description"),
-        bfs_version: "5.0",
+        bfs_paymentDesc: "Sample Product",
+        bfs_version: "1.0",
       };
 
       const checksum = generateBFSChecksum(armessage, privateKey);
