@@ -5,7 +5,16 @@ import nodemailer from "nodemailer";
 import axios from "axios";
 import { base_delete_user } from "../../index.js";
 import { transporterMain } from "../admin/adminManage.js";
-import { generateOtp } from "../../lib.js";
+import fs from "fs";
+import { verifyBFSAC } from "./bfs-verify.js";
+
+const bfsPublicKey = fs.readFileSync("./bfs_public_key.pem", "utf8");
+import {
+  formatTimestamp,
+  generateBFSChecksum,
+  generateNumericOrderNumber,
+  generateOtp,
+} from "../../lib.js";
 import Redis from "ioredis";
 
 const redis = new Redis({
@@ -58,9 +67,9 @@ export const bookGround = async (req, res) => {
       }
     } else {
       if (day == 0 || day == 6) {
-        total += ground.weekendNightPrice;
+        total += ground.weekendPrice;
       } else {
-        total += ground.nightprice;
+        total += ground.pricePerHour;
       }
     }
   }
@@ -197,6 +206,26 @@ export const mailer = [
         { _id: bookingId },
         { screenshot: true, $set: { expiresAt } }
       );
+      const date = formatTimestamp(Date.now());
+      const order_number = generateNumericOrderNumber(booking._id.toString());
+
+      const privateKey = fs.readFileSync("./private_key.pem", "utf8");
+
+      let armessage = {
+        bfs_msgType: "AR",
+        bfs_benfTxnTime: date,
+        bfs_orderNo: order_number,
+        bfs_benfId: "BE10000266",
+        bfs_benfBankCode: "01",
+        bfs_txnCurrency: "BTN",
+        bfs_txnAmount: Number(booking.amount).toFixed(2),
+        bfs_remitterEmail: booking.email,
+        bfs_paymentDesc: encodeURIComponent("Sample Product Description"),
+        bfs_version: "5.0",
+      };
+
+      const checksum = generateBFSChecksum(armessage, privateKey);
+      armessage.bfs_checkSum = checksum;
 
       const ground = await Ground.findById(groundId).populate("admin", "_id");
       const admin = await Admin.findById(ground.admin._id);
@@ -211,35 +240,24 @@ export const mailer = [
         email: booking.email,
         adminId: admin.email,
       });
-      const groundName = await Ground.findById(groundId);
-      const attachment = {
-        filename: file.originalname, // preserve user file name
-        content: file.buffer, // use buffer (no base64 conversion)
-        contentType: file.mimetype, // e.g. image/png, image/jpeg
-      };
+      // 👉 Convert AR JSON to POST redirect form
+      let formInputs = Object.entries(armessage)
+        .map(
+          ([key, value]) =>
+            `<input type="hidden" name="${key}" value="${value}" />`
+        )
+        .join("");
 
-      // Email to Admin
-      const adminMail = transporterMain.sendMail({
-        from: APP_EMAIL,
-        to: admin.email,
-        subject: "Payment Screenshot",
-        text: `Payment screenshot from ${name}, contact: ${contactInfo}, ground: ${groundName.name}`,
-        attachments: [attachment],
-      });
-
-      // Confirmation Email to User
-      const userMail = transporterMain.sendMail({
-        from: APP_EMAIL,
-        to: email,
-        subject: "Payment Screenshot Confirmation",
-        text: `Here is the payment screenshot you sent to the ground owner. The owner will verify your payment and confirm your booking. You will be notified via email once confirmed.`,
-        attachments: [attachment],
-      });
-
-      // run in parallel
-      await Promise.all([adminMail, userMail]);
-
-      res.json({ message: "Screenshot sent successfully" });
+      // 👉 Send HTML to auto-redirect user to BFS
+      return res.send(`
+        <html>
+          <body onload="document.forms[0].submit()">
+            <form method="POST" action="http://uatbfssecure.rma.org.bt/BFSSecure/nvpapi">
+              ${formInputs}
+            </form>
+          </body>
+        </html>
+      `);
     } catch (err) {
       console.error(err);
       res
@@ -425,4 +443,19 @@ export const sendFeedback = async (req, res) => {
       `,
   });
   return res.status(200).json({ msg: "Feedback submitted" });
+};
+export const bfsCallback = async (req, res) => {
+  const rawResponse = req.body; // DO NOT parse JSON
+
+  const isValid = verifyBFSAC(rawResponse, bfsPublicKey);
+
+  if (!isValid) {
+    console.log("❌ Invalid BFS signature — possible tampering!");
+    return res.status(400).send("INVALID CHECKSUM");
+  }
+
+  console.log("✔ Valid BFS AC Message");
+
+  // TODO: Persist booking status as confirmed payment here
+  res.send("SUCCESS");
 };
