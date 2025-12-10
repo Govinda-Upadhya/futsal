@@ -252,7 +252,7 @@ export const mailer = [
       return res.send(`
         <html>
           <body onload="document.forms[0].submit()">
-            <form method="POST" action="http://uatbfssecure.rma.org.bt/BFSSecure/nvpapi">
+            <form method="POST" action="https://uatbfssecure.rma.org.bt/BFSSecure/makePayment">
               ${formInputs}
             </form>
           </body>
