@@ -247,6 +247,7 @@ export const mailer = [
             `<input type="hidden" name="${key}" value="${value}" />`
         )
         .join("");
+      console.log("done");
 
       // 👉 Send HTML to auto-redirect user to BFS
       return res.send(`
