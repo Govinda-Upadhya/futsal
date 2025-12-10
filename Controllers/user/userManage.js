@@ -218,7 +218,7 @@ export const mailer = [
         bfs_benfId: "BE10000266",
         bfs_benfBankCode: "01",
         bfs_txnCurrency: "BTN",
-        bfs_txnAmount: Number(booking.amount).toFixed(2),
+        bfs_txnAmount: "1.0",
         bfs_remitterEmail: booking.email,
         bfs_paymentDesc: "Sample Product",
         bfs_version: "1.0",
