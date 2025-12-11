@@ -1,7 +1,9 @@
 import { Router } from "express";
 import {
   acceptChallenge,
-  bfsCallback,
+  bfsCancelled,
+  bfsFailure,
+  bfsSuccess,
   bookGround,
   bookinginfo,
   cancelBooking,
@@ -39,4 +41,6 @@ userRoutes.post("/feedback", sendFeedback);
 userRoutes.post("/verifyotp", otpLimiter, verifyOtp);
 userRoutes.post("/verifychallengeotp", otpLimiter, verifyChallengesOtp);
 userRoutes.post("/resendotp", resendOtp);
-userRoutes.post("/bfs/callback", bfsCallback);
+userRoutes.post("/bfs/success", bfsSuccess);
+userRoutes.post("/bfs/failure", bfsFailure);
+userRoutes.post("/bfs/cancelled", bfsCancelled);

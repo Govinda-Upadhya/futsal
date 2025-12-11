@@ -445,18 +445,39 @@ export const sendFeedback = async (req, res) => {
   });
   return res.status(200).json({ msg: "Feedback submitted" });
 };
-export const bfsCallback = async (req, res) => {
-  const rawResponse = req.body; // DO NOT parse JSON
+export const bfsSuccess = async (req, res) => {
+  // BFS sends POST with form data — DO NOT JSON parse
+  const rawResponse = req.body;
 
-  const isValid = verifyBFSAC(rawResponse, bfsPublicKey);
+  console.log("📥 BFS AC Message Received for success:");
+  console.log(rawResponse);
 
-  if (!isValid) {
-    console.log("❌ Invalid BFS signature — possible tampering!");
-    return res.status(400).send("INVALID CHECKSUM");
-  }
+  // TODO: Validate checksum, verify txn, update DB, etc.
 
-  console.log("✔ Valid BFS AC Message");
+  // Redirect user to your frontend route
+  return res.redirect(302, "https://www.thanggo.com/users/booking/success");
+};
+export const bfsFailure = async (req, res) => {
+  // BFS sends POST with form data — DO NOT JSON parse
+  const rawResponse = req.body;
 
-  // TODO: Persist booking status as confirmed payment here
-  res.send("SUCCESS");
+  console.log("📥 BFS AC Message Received for failure:");
+  console.log(rawResponse);
+
+  // TODO: Validate checksum, verify txn, update DB, etc.
+
+  // Redirect user to your frontend route
+  return res.redirect(302, "https://www.thanggo.com/users/booking/failed");
+};
+export const bfsCancelled = async (req, res) => {
+  // BFS sends POST with form data — DO NOT JSON parse
+  const rawResponse = req.body;
+
+  console.log("📥 BFS AC Message Received for cancellation:");
+  console.log(rawResponse);
+
+  // TODO: Validate checksum, verify txn, update DB, etc.
+
+  // Redirect user to your frontend route
+  return res.redirect(302, "https://www.thanggo.com/users/booking/cancelled");
 };
