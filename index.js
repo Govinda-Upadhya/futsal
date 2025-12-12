@@ -14,10 +14,6 @@ import cors from "cors";
 import { superAdminRoutes } from "./Routes/superAdmin.js";
 
 const app = e();
-
-// ------------------------------------------------------
-// 🔥 RAW BODY MIDDLEWARE: MUST BE THE 1ST MIDDLEWARE
-// ------------------------------------------------------
 app.use((req, res, next) => {
   let data = "";
 
@@ -30,22 +26,21 @@ app.use((req, res, next) => {
     next();
   });
 });
+export const base_delete_admin = BASE_DELETE_ADMIN;
+export const base_delete_user = BASE_DELETE_USER;
+export const allowedOrigin = ALLOWED_ORIGINS;
 
-// ------------------------------------------------------
-// Now all other middleware
-// ------------------------------------------------------
 app.use(e.json({ limit: "10mb" }));
 app.use(e.urlencoded({ limit: "10mb", extended: true }));
 
 app.use(
   cors({
-    origin: ALLOWED_ORIGINS,
+    origin: allowedOrigin,
     credentials: true,
   })
 );
 
 app.use(cookieParser());
-
 app.use("/users", userRoutes);
 app.use("/admin", adminRoutes);
 app.use("/superAdmin", superAdminRoutes);
@@ -61,5 +56,4 @@ async function main() {
     console.log(error);
   }
 }
-
 main();
