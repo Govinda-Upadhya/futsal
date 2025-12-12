@@ -93,7 +93,6 @@ export function generateNumericOrderNumber(bookingId) {
  * @param {String} publicKey - BFS PUBLIC KEY in PEM format
  * @returns {Boolean} true if valid, false if tampered
  */
-import * as crypto from "crypto";
 
 export function verifyBFSAC(data, publicKey) {
   const bfsOrder = [
