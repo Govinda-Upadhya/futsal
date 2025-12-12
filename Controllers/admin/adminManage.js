@@ -145,7 +145,7 @@ export const getBooking = async (req, res) => {
 
     const bookings = await Booking.find({
       ground: { $in: grounds.map((g) => g._id) },
-      screenshot: true,
+      payment_status: "SUCCESS",
     }).populate("ground", "name type");
 
     return res.json({ bookings });
@@ -154,80 +154,82 @@ export const getBooking = async (req, res) => {
   }
 };
 
-export const acceptBooking = async (req, res) => {
+// export const acceptBooking = async (req, res) => {
+//   try {
+//     const { bookingId } = req.body;
+//     const booking = await Booking.findByIdAndUpdate(bookingId, {
+//       status: "CONFIRMED",
+//     }).populate("ground", "name");
+//     await BookingData.updateOne(
+//       { bookingId: bookingId },
+//       {
+//         status: "CONFIRMED",
+//       }
+//     );
+//     if (!booking) {
+//       return res.status(404).json({ msg: "cannot find the booking" });
+//     }
+
+//     const formattedDate = new Date(booking.date).toLocaleDateString("en-GB", {
+//       day: "2-digit",
+//       month: "short",
+//       year: "numeric",
+//     });
+//     await transporterMain.sendMail({
+//       from: APP_EMAIL,
+//       to: booking.email,
+//       subject: "Booking confirmed",
+//       text: `dear ${booking.name} your booking for ground ${booking.ground.name} on ${formattedDate} has been confirmed. please be on time and have fun`,
+//     });
+
+//     res.json({ message: "confirmation send to client" });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Failed to send screenshot" });
+//   }
+// };
+export const adminBooking = async (req, res) => {
   try {
-    const { bookingId } = req.body;
-    const booking = await Booking.findByIdAndUpdate(bookingId, {
-      status: "CONFIRMED",
-    }).populate("ground", "name");
-    await BookingData.updateOne(
-      { bookingId: bookingId },
-      {
-        status: "CONFIRMED",
-      }
-    );
-    if (!booking) {
-      return res.status(404).json({ msg: "cannot find the booking" });
+    const id = req.params.id;
+
+    // Validate ground
+    const ground = await Ground.findById(id);
+    if (!ground) {
+      return res.status(404).json({ msg: "Ground does not exist" });
     }
 
-    const formattedDate = new Date(booking.date).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-    await transporterMain.sendMail({
-      from: APP_EMAIL,
-      to: booking.email,
-      subject: "Booking confirmed",
-      text: `dear ${booking.name} your booking for ground ${booking.ground.name} on ${formattedDate} has been confirmed. please be on time and have fun`,
-    });
+    const bookingdata = req.body.data; // ❗ no need to await
 
-    res.json({ message: "confirmation send to client" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to send screenshot" });
-  }
-};
-export const adminBooking = async (req, res) => {
-  const id = req.params.id;
-
-  const ground = await Ground.findById(id);
-  if (!ground) {
-    return res.json({ msg: "Ground doesnt exists" });
-  }
-
-  const bookingdata = await req.body.data;
-
-  try {
+    // Create booking with placeholder expiresAt (temporary)
     const booking = await Booking.create({
       date: bookingdata.date,
       name: bookingdata.name,
       email: bookingdata.email,
       contact: bookingdata.phone,
       time: bookingdata.availability,
-      status: "CONFIRMED",
-      screenshot: true,
+      payment_status: "SUCCESS",
+      booking_orderNo: "self",
       ground: ground._id,
       amount: ground.pricePerHour * bookingdata.availability.length,
-      expiresAt: new Date(Date.now() + 6 * 60 * 1000),
+      expiresAt: new Date(Date.now() + 6 * 60 * 1000), // temporary
     });
-    const lastSlotEnd = booking.time[booking.time.length - 1].end; // "08:30"
-    const bookingDate = new Date(booking.date);
-    const [hours, minutes] = lastSlotEnd.split(":").map(Number);
-
-    // Use UTC methods to avoid timezone shift
-    bookingDate.setUTCHours(hours, minutes, 0, 0);
-
-    const expiresAt = bookingDate;
-
-    await Booking.updateOne(
-      { _id: booking._id },
-      { screenshot: true, $set: { expiresAt } }
-    );
 
     if (!booking) {
-      return res.status(400).json({ msg: "booking failed please try again" });
+      return res.status(400).json({ msg: "Booking failed, please try again" });
     }
+
+    // Compute correct expiresAt based on last timeslot
+    const lastSlotEnd = booking.time[booking.time.length - 1].end; // e.g. "08:30"
+    const [hours, minutes] = lastSlotEnd.split(":").map(Number);
+
+    const bookingDate = new Date(booking.date);
+    bookingDate.setHours(hours, minutes, 0, 0);
+
+    // Apply correct expiresAt
+    booking.expiresAt = bookingDate;
+    await booking.save();
+
+    // Send email
     const formattedDate = new Date(booking.date).toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "short",
@@ -238,16 +240,18 @@ export const adminBooking = async (req, res) => {
       from: APP_EMAIL,
       to: booking.email,
       subject: "Booking confirmed",
-      text: `dear ${booking.name} your booking for ground ${booking.ground.name} on ${formattedDate} has been confirmed. please be on time and have fun`,
+      text: `Dear ${booking.name}, your booking for ground ${ground.name} on ${formattedDate} has been confirmed. Please be on time and have fun.`,
     });
-    return res.json({ msg: "booking info" });
+
+    return res.json({ msg: "Booking created successfully" });
   } catch (error) {
-    console.log(error);
+    console.error("Admin booking error:", error);
     return res
       .status(500)
-      .json({ msg: "internal server error", err: error.message });
+      .json({ msg: "Internal server error", err: error.message });
   }
 };
+
 export const resendOtp = async (req, res) => {
   const { email } = req.body;
   const otp = generateOtp();
@@ -263,37 +267,37 @@ export const resendOtp = async (req, res) => {
     .json({ message: "OTP send successfully to your email" });
 };
 
-export const rejectBooking = async (req, res) => {
-  const info = req.body;
-  const booking = await Booking.findById(info.bookingId).populate(
-    "ground",
-    "name"
-  );
-  const admin = await Admin.findOne({ email: req.admin.email });
-  if (!booking) {
-    return res.status(404).json({ msg: "booking info invalid" });
-  }
+// export const rejectBooking = async (req, res) => {
+//   const info = req.body;
+//   const booking = await Booking.findById(info.bookingId).populate(
+//     "ground",
+//     "name"
+//   );
+//   const admin = await Admin.findOne({ email: req.admin.email });
+//   if (!booking) {
+//     return res.status(404).json({ msg: "booking info invalid" });
+//   }
 
-  const formattedDate = new Date(booking.date).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-  await transporterMain.sendMail({
-    from: APP_EMAIL,
-    to: booking.email,
-    subject: "Booking rejected",
-    text: `dear ${booking.name} your booking for ground ${booking.ground.name} on ${formattedDate} has been rejected because of "${info.reason}" as stated by the owner of the ground, for further query please contact the owner at number ${admin.contact}`,
-  });
-  await transporterMain.sendMail({
-    from: APP_EMAIL,
-    to: admin.email,
-    subject: `booking with id ${booking._id} done by ${booking.name} with contact info ${booking.contact} becuase of reason "${info.reason}"`,
-    text: `dear ${booking.name} your booking for ground ${booking.ground.name} on ${booking.date} has been rejected because of "${info.reason}" as stated by the owner of the ground, for further query please contact the owner`,
-  });
-  await Booking.deleteOne({ _id: booking._id });
-  return res.json({ msg: "booking rejected and removed successfully " });
-};
+//   const formattedDate = new Date(booking.date).toLocaleDateString("en-GB", {
+//     day: "2-digit",
+//     month: "short",
+//     year: "numeric",
+//   });
+//   await transporterMain.sendMail({
+//     from: APP_EMAIL,
+//     to: booking.email,
+//     subject: "Booking rejected",
+//     text: `dear ${booking.name} your booking for ground ${booking.ground.name} on ${formattedDate} has been rejected because of "${info.reason}" as stated by the owner of the ground, for further query please contact the owner at number ${admin.contact}`,
+//   });
+//   await transporterMain.sendMail({
+//     from: APP_EMAIL,
+//     to: admin.email,
+//     subject: `booking with id ${booking._id} done by ${booking.name} with contact info ${booking.contact} becuase of reason "${info.reason}"`,
+//     text: `dear ${booking.name} your booking for ground ${booking.ground.name} on ${booking.date} has been rejected because of "${info.reason}" as stated by the owner of the ground, for further query please contact the owner`,
+//   });
+//   await Booking.deleteOne({ _id: booking._id });
+//   return res.json({ msg: "booking rejected and removed successfully " });
+// };
 
 export const deleteBooking = async (req, res) => {
   const id = req.params.id;
