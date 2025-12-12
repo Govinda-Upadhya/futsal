@@ -14,18 +14,7 @@ import cors from "cors";
 import { superAdminRoutes } from "./Routes/superAdmin.js";
 
 const app = e();
-app.use((req, res, next) => {
-  let data = "";
 
-  req.on("data", (chunk) => {
-    data += chunk;
-  });
-
-  req.on("end", () => {
-    req.rawBody = data;
-    next();
-  });
-});
 export const base_delete_admin = BASE_DELETE_ADMIN;
 export const base_delete_user = BASE_DELETE_USER;
 export const allowedOrigin = ALLOWED_ORIGINS;
