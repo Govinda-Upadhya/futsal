@@ -454,7 +454,7 @@ export const bfsCancelled = async (req, res) => {
   console.log("📥 BFS AC Message Received for cancellation:");
   console.log(rawResponse);
 
-  // TODO: Validate checksum, verify txn, update DB, etc.
+  await Booking.deleteOne({ booking_orderNo: data.bfs_orderNo });
 
   // Redirect user to your frontend route
   return res.redirect("https://www.thanggo.com/users/booking/cancelled");
