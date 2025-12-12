@@ -12,12 +12,9 @@ import {
   fetchGrounds,
   getTimeBooked,
   mailer,
-  resendOtp,
   seeDate,
   sendChallenge,
   sendFeedback,
-  verifyChallengesOtp,
-  verifyOtp,
   viewGrounduser,
 } from "../Controllers/user/userManage.js";
 import { viewGrounds } from "../Controllers/ground/groundManage.js";
