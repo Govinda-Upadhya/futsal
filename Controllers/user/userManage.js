@@ -434,6 +434,7 @@ export const bfsSuccess = async (req, res) => {
     // Verify checksum
     const result = verifyBFSAC(data, publicKey);
     console.log("AC result", result);
+    console.log(data);
     // if (!result.valid) {
     //   console.error("❌ INVALID CHECKSUM");
     //   return res.status(400).send("Invalid checksum");
