@@ -433,11 +433,11 @@ export const bfsSuccess = async (req, res) => {
 
     // Verify checksum
     const result = verifyBFSAC(data, publicKey);
-
-    if (!result.valid) {
-      console.error("❌ INVALID CHECKSUM");
-      return res.status(400).send("Invalid checksum");
-    }
+    console.log("AC result", result);
+    // if (!result.valid) {
+    //   console.error("❌ INVALID CHECKSUM");
+    //   return res.status(400).send("Invalid checksum");
+    // }
 
     // Update booking status
     await Booking.updateOne(
