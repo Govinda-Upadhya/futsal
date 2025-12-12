@@ -1,6 +1,5 @@
 import { Router } from "express";
 import {
-  acceptBooking,
   adminBooking,
   adminSignIn,
   adminSignUp,
@@ -17,7 +16,6 @@ import {
   getWeeklyTimeStat,
   isLoggedIn,
   overall,
-  rejectBooking,
   updateAdmin,
 } from "../Controllers/admin/adminManage.js";
 import { adminMiddleware } from "../authmiddleware.js";
