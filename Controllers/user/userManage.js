@@ -426,82 +426,30 @@ export const sendFeedback = async (req, res) => {
 };
 export const bfsSuccess = async (req, res) => {
   try {
-    console.log("📥 RAW BODY:", req.rawBody); // raw payload
-    console.log("📥 Express PARSED BODY:", req.body); // debug only
-
-    // Step 1: Decode RAW BFS AC message
+    // Decode AC message from RAW body (not req.body)
     const data = querystring.decode(req.rawBody);
 
-    console.log("📥 BFS AC Message (decoded):");
-    console.log(data);
-
-    // Step 2: Load BFS public key
     const publicKey = fs.readFileSync("bfs_public.pem", "utf8");
-    console.log(publicKey);
-    // Step 3: AC checksum order EXACT from BFS docs
-    const bfsOrderAC = [
-      "bfs_benfId",
-      "bfs_benfTxnTime",
-      "bfs_bfsTxnId",
-      "bfs_bfsTxnTime",
-      "bfs_debitAuthCode",
-      "bfs_debitAuthNo",
-      "bfs_msgType",
-      "bfs_orderNo",
-      "bfs_remitterBankId",
-      "bfs_remitterName",
-      "bfs_txnAmount",
-      "bfs_txnCurrency",
-    ];
 
-    // Build source string
-    const sourceString = bfsOrderAC.map((k) => data[k] ?? "").join("|");
+    // Verify checksum
+    const result = verifyBFSAC(data, publicKey);
 
-    console.log("🔍 Constructed Source String:");
-    console.log(sourceString);
-
-    // Step 4: Convert checksum hex to bytes
-    const signatureBytes = Buffer.from(data.bfs_checkSum, "hex");
-
-    // Step 5: Try SHA256 then SHA1
-    let isValid = false;
-    let usedAlg = null;
-
-    for (const alg of ["RSA-SHA256", "RSA-SHA1"]) {
-      try {
-        const verifier = crypto.createVerify(alg);
-        verifier.update(sourceString, "utf8");
-        if (verifier.verify(publicKey, signatureBytes)) {
-          isValid = true;
-          usedAlg = alg;
-          break;
-        }
-      } catch (e) {
-        console.error(`⚠️ Error testing ${alg}:`, e.message);
-      }
-    }
-
-    console.log("🔒 Checksum Valid:", isValid, "via:", usedAlg);
-
-    if (!isValid) {
-      console.error("❌ INVALID CHECKSUM — POSSIBLE FRAUD/TAMPERING");
-      console.log("Source String:", sourceString);
+    if (!result.valid) {
+      console.error("❌ INVALID CHECKSUM");
       return res.status(400).send("Invalid checksum");
     }
 
-    // Step 6: Update booking
+    // Update booking status
     await Booking.updateOne(
       { booking_orderNo: data.bfs_orderNo },
       { payment_status: "SUCCESS" }
     );
 
-    console.log("🎉 Payment marked SUCCESS");
-
-    // Step 7: Redirect to frontend
+    // Redirect to frontend success page
     return res.redirect("https://www.thanggo.com/users/booking/confirmed");
   } catch (err) {
-    console.error("🔥 ERROR IN bfsSuccess:", err);
-    return res.status(500).send("Server error during AC processing");
+    console.error("AC ERROR:", err);
+    return res.status(500).send("Server error during AC");
   }
 };
 
