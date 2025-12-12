@@ -193,7 +193,7 @@ export const mailer = async (req, res) => {
       bfs_benfId: "BE10000266",
       bfs_benfBankCode: "01",
       bfs_txnCurrency: "BTN",
-      bfs_txnAmount: 1,
+      bfs_txnAmount: booking.amount * 0.1,
       bfs_remitterEmail: booking.email,
       bfs_paymentDesc: "Sample Product",
       bfs_version: "1.0",
@@ -454,7 +454,7 @@ export const bfsCancelled = async (req, res) => {
   console.log("📥 BFS AC Message Received for cancellation:");
   console.log(rawResponse);
 
-  await Booking.deleteOne({ booking_orderNo: data.bfs_orderNo });
+  await Booking.deleteOne({ booking_orderNo: rawResponse.bfs_orderNo });
 
   // Redirect user to your frontend route
   return res.redirect("https://www.thanggo.com/users/booking/cancelled");
