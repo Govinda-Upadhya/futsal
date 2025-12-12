@@ -8,8 +8,6 @@ import { transporterMain } from "../admin/adminManage.js";
 import fs from "fs";
 import * as crypto from "crypto";
 
-import querystring from "querystring";
-
 // const bfsPublicKey = fs.readFileSync("./bfs_public_key.pem", "utf8");
 import {
   formatTimestamp,
@@ -425,35 +423,18 @@ export const sendFeedback = async (req, res) => {
   return res.status(200).json({ msg: "Feedback submitted" });
 };
 export const bfsSuccess = async (req, res) => {
-  try {
-    // Decode AC message from RAW body (not req.body)
-    const data = querystring.decode(req.rawBody);
+  const data = req.body;
 
-    const publicKey = fs.readFileSync("bfs_public.pem", "utf8");
+  console.log("📥 BFS AC Message Received:");
+  console.log(data);
 
-    // Verify checksum
-    const result = verifyBFSAC(data, publicKey);
-    console.log("AC result", result);
-    console.log(data);
-    // if (!result.valid) {
-    //   console.error("❌ INVALID CHECKSUM");
-    //   return res.status(400).send("Invalid checksum");
-    // }
+  await Booking.updateOne(
+    { booking_orderNo: data.bfs_orderNo },
+    { payment_status: "SUCCESS" }
+  );
 
-    // Update booking status
-    await Booking.updateOne(
-      { booking_orderNo: data.bfs_orderNo },
-      { payment_status: "SUCCESS" }
-    );
-
-    // Redirect to frontend success page
-    return res.redirect("https://www.thanggo.com/users/booking/confirmed");
-  } catch (err) {
-    console.error("AC ERROR:", err);
-    return res.status(500).send("Server error during AC");
-  }
+  return res.redirect("https://www.thanggo.com/users/booking/confirmed");
 };
-
 export const bfsFailure = async (req, res) => {
   // BFS sends POST with form data — DO NOT JSON parse
   const rawResponse = req.body;
