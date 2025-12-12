@@ -435,13 +435,12 @@ export const bfsSuccess = async (req, res) => {
   console.log("🔒 Checksum Result:", result);
 
   if (!result.valid) {
-    console.error("❌ INVALID CHECKSUM");
-    console.error("Source String Used:", result.sourceString);
+    console.error("❌ INVALID CHECKSUM — POSSIBLE FRAUD");
+    console.log("Source String:", result.sourceString);
     return res.status(400).send("Invalid checksum");
   }
 
-  // At this point checksum is valid
-  console.log("🔥 VALID CHECKSUM using algorithm:", result.algorithm);
+  console.log("🔥 VALID CHECKSUM VIA:", result.algorithm);
 
   await Booking.updateOne(
     { booking_orderNo: data.bfs_orderNo },
