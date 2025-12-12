@@ -455,7 +455,7 @@ export const bfsSuccess = async (req, res) => {
   // TODO: Validate checksum, verify txn, update DB, etc.
 
   // Redirect user to your frontend route
-  return res.redirect(302, "https://www.thanggo.com/users/booking/success");
+  return res.redirect("https://www.thanggo.com/users/booking/success");
 };
 export const bfsFailure = async (req, res) => {
   // BFS sends POST with form data — DO NOT JSON parse
@@ -467,7 +467,7 @@ export const bfsFailure = async (req, res) => {
   // TODO: Validate checksum, verify txn, update DB, etc.
 
   // Redirect user to your frontend route
-  return res.redirect(302, "https://www.thanggo.com/users/booking/failed");
+  return res.redirect("https://www.thanggo.com/users/booking/failed");
 };
 export const bfsCancelled = async (req, res) => {
   // BFS sends POST with form data — DO NOT JSON parse
@@ -479,5 +479,5 @@ export const bfsCancelled = async (req, res) => {
   // TODO: Validate checksum, verify txn, update DB, etc.
 
   // Redirect user to your frontend route
-  return res.redirect(302, "https://www.thanggo.com/users/booking/cancelled");
+  return res.redirect("https://www.thanggo.com/users/booking/cancelled");
 };
