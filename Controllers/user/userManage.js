@@ -6,6 +6,7 @@ import axios from "axios";
 import { base_delete_user } from "../../index.js";
 import { transporterMain } from "../admin/adminManage.js";
 import fs from "fs";
+import * as crypto from "crypto";
 
 // const bfsPublicKey = fs.readFileSync("./bfs_public_key.pem", "utf8");
 import {
