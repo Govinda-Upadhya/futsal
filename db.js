@@ -129,26 +129,22 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    screenshot: {
-      type: Boolean,
-      default: false,
-    },
     amount: Number,
     date: Date,
     time: {
       type: [timeRangeSchema],
       required: true,
     },
-    bookingId: String,
+    booking_orderNo: { type: String, required: true },
+    payment_status: {
+      type: String,
+      enum: ["SUCCESS", "FAILURE", "CANCELLED", "PENDING"],
+      default: "PENDING",
+    },
     ground: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Ground",
       required: true,
-    },
-    status: {
-      type: String,
-      enum: ["CONFIRMED", "PENDING", "REJECTED"],
-      default: "PENDING",
     },
     expiresAt: {
       type: Date,

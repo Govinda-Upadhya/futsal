@@ -80,8 +80,8 @@ export const bookGround = async (req, res) => {
       email: bookingdata.email,
       contact: bookingdata.phone,
       time: bookingdata.availability,
-      status: "PENDING",
-      screenshot: false,
+      payment_status: "PENDING",
+      booking_orderNo: "0",
       ground: ground._id,
       amount: total,
       expiresAt: new Date(Date.now() + 6 * 60 * 1000),
@@ -90,19 +90,6 @@ export const bookGround = async (req, res) => {
     if (!bookings) {
       return res.status(400).json({ msg: "booking failed please try again" });
     }
-    const otp = generateOtp();
-    const fullDetail = {
-      otp,
-      groundId: ground._id,
-      screenshoot: false,
-    };
-    await redis.set(`otp:${bookingdata.email}`, otp, "EX", 90);
-    transporterMain.sendMail({
-      from: APP_EMAIL,
-      to: bookingdata.email,
-      subject: "OTP",
-      text: `Otp for your thanggo ground booking is ${otp}. it is valid for 1 minute.`,
-    });
     return res.json({ msg: "bookign done", booking_id: bookings._id });
   } catch (error) {
     console.log(error);
@@ -111,36 +98,36 @@ export const bookGround = async (req, res) => {
       .json({ msg: "internal server error", err: error.message });
   }
 };
-export const resendOtp = async (req, res) => {
-  const { email } = req.body;
-  const otp = generateOtp();
-  await redis.set(`otp:${email}`, otp, "EX", 90);
-  transporterMain.sendMail({
-    from: APP_EMAIL,
-    to: email,
-    subject: "OTP",
-    text: `Otp for your thanggo ground booking is ${otp}. it is valid for 1 minute.`,
-  });
-  return res
-    .status(200)
-    .json({ message: "OTP send successfully to your email" });
-};
-export const verifyOtp = async (req, res) => {
-  const { email, otp, id } = req.body;
-  if (!email || !otp)
-    return res.status(400).json({ message: "Make a booking first" });
-  const booking = await Booking.findOne({ _id: id });
-  const storedOtp = await redis.get(`otp:${email}`);
-  if (!storedOtp)
-    return res.status(400).json({ message: "OTP expired or not found" });
+// export const resendOtp = async (req, res) => {
+//   const { email } = req.body;
+//   const otp = generateOtp();
+//   await redis.set(`otp:${email}`, otp, "EX", 90);
+//   transporterMain.sendMail({
+//     from: APP_EMAIL,
+//     to: email,
+//     subject: "OTP",
+//     text: `Otp for your thanggo ground booking is ${otp}. it is valid for 1 minute.`,
+//   });
+//   return res
+//     .status(200)
+//     .json({ message: "OTP send successfully to your email" });
+// };
+// export const verifyOtp = async (req, res) => {
+//   const { email, otp, id } = req.body;
+//   if (!email || !otp)
+//     return res.status(400).json({ message: "Make a booking first" });
+//   const booking = await Booking.findOne({ _id: id });
+//   const storedOtp = await redis.get(`otp:${email}`);
+//   if (!storedOtp)
+//     return res.status(400).json({ message: "OTP expired or not found" });
 
-  if (storedOtp == otp) {
-    await redis.del(`otp:${email}`); // remove OTP after verification
-    return res.status(200).json({ id: booking._id });
-  } else {
-    return res.status(400).json({ message: "Invalid OTP" });
-  }
-};
+//   if (storedOtp == otp) {
+//     await redis.del(`otp:${email}`); // remove OTP after verification
+//     return res.status(200).json({ id: booking._id });
+//   } else {
+//     return res.status(400).json({ message: "Invalid OTP" });
+//   }
+// };
 export const verifyChallengesOtp = async (req, res) => {
   const { email, otp, id } = req.body;
   if (!email || !otp)
@@ -168,10 +155,6 @@ export const bookinginfo = async (req, res) => {
   console.log(id);
   const info = await Booking.findById(id).populate("ground", "name _id");
 
-  const ground = await Ground.findById(info.ground._id).populate(
-    "admin",
-    "scanner"
-  );
   if (!info) {
     return res.status(404).json({
       msg: "no info",
@@ -179,78 +162,72 @@ export const bookinginfo = async (req, res) => {
   }
   return res.json({
     info: info,
-    scanner: ground.admin.scanner,
   });
 };
-export const mailer = [
-  upload.single("screenshot"), // 👈 expect "screenshot" field from FormData
-  async (req, res) => {
-    try {
-      const { groundId, name, contactInfo, email, bookingId } = req.body;
-      const file = req.file; // 👈 screenshot file is here (in memory)
-      const booking = await Booking.findById(bookingId);
-      if (!file) {
-        return res.status(400).json({ error: "Screenshot is required" });
-      }
-      // compute expiresAt from last time slot
-      const lastSlotEnd = booking.time[booking.time.length - 1].end; // "08:30"
-      const bookingDate = new Date(booking.date);
-      const [hours, minutes] = lastSlotEnd.split(":").map(Number);
+export const mailer = async (req, res) => {
+  try {
+    const { groundId, name, contactInfo, email, bookingId } = req.body;
 
-      // Use UTC methods to avoid timezone shift
-      bookingDate.setUTCHours(hours, minutes, 0, 0);
+    const booking = await Booking.findById(bookingId);
 
-      const expiresAt = bookingDate;
+    // compute expiresAt from last time slot
+    const lastSlotEnd = booking.time[booking.time.length - 1].end; // "08:30"
+    const bookingDate = new Date(booking.date);
+    const [hours, minutes] = lastSlotEnd.split(":").map(Number);
 
-      await Booking.updateOne(
-        { _id: bookingId },
-        { screenshot: true, $set: { expiresAt } }
-      );
-      const date = formatTimestamp(Date.now());
-      const order_number = generateNumericOrderNumber(booking._id.toString());
+    // Use UTC methods to avoid timezone shift
+    bookingDate.setUTCHours(hours, minutes, 0, 0);
 
-      const privateKey = fs.readFileSync("./private_key.pem", "utf8");
+    const expiresAt = bookingDate;
 
-      let armessage = {
-        bfs_msgType: "AR",
-        bfs_benfTxnTime: date,
-        bfs_orderNo: order_number,
-        bfs_benfId: "BE10000266",
-        bfs_benfBankCode: "01",
-        bfs_txnCurrency: "BTN",
-        bfs_txnAmount: "1.0",
-        bfs_remitterEmail: booking.email,
-        bfs_paymentDesc: "Sample Product",
-        bfs_version: "1.0",
-      };
+    const date = formatTimestamp(Date.now());
+    const order_number = generateNumericOrderNumber(booking._id.toString());
 
-      const checksum = generateBFSChecksum(armessage, privateKey);
-      armessage.bfs_checkSum = checksum;
+    const privateKey = fs.readFileSync("./private_key.pem", "utf8");
 
-      const ground = await Ground.findById(groundId).populate("admin", "_id");
-      const admin = await Admin.findById(ground.admin._id);
+    let armessage = {
+      bfs_msgType: "AR",
+      bfs_benfTxnTime: date,
+      bfs_orderNo: order_number,
+      bfs_benfId: "BE10000266",
+      bfs_benfBankCode: "01",
+      bfs_txnCurrency: "BTN",
+      bfs_txnAmount: "1.0",
+      bfs_remitterEmail: booking.email,
+      bfs_paymentDesc: "Sample Product",
+      bfs_version: "1.0",
+    };
 
-      const bookingData = await BookingData.create({
-        amount: booking.amount,
-        time: booking.time,
-        ground: groundId,
-        status: booking.status,
-        bookingId: bookingId,
-        date: booking.date,
-        email: booking.email,
-        adminId: admin.email,
-      });
-      // 👉 Convert AR JSON to POST redirect form
-      let formInputs = Object.entries(armessage)
-        .map(
-          ([key, value]) =>
-            `<input type="hidden" name="${key}" value="${value}" />`
-        )
-        .join("");
-      console.log("done");
+    const checksum = generateBFSChecksum(armessage, privateKey);
+    armessage.bfs_checkSum = checksum;
+    await Booking.updateOne(
+      { _id: booking._id },
+      { booking_orderNo: order_number }
+    );
+    const ground = await Ground.findById(groundId).populate("admin", "_id");
+    const admin = await Admin.findById(ground.admin._id);
 
-      // 👉 Send HTML to auto-redirect user to BFS
-      return res.send(`
+    const bookingData = await BookingData.create({
+      amount: booking.amount,
+      time: booking.time,
+      ground: groundId,
+      status: booking.status,
+      bookingId: bookingId,
+      date: booking.date,
+      email: booking.email,
+      adminId: admin.email,
+    });
+    // 👉 Convert AR JSON to POST redirect form
+    let formInputs = Object.entries(armessage)
+      .map(
+        ([key, value]) =>
+          `<input type="hidden" name="${key}" value="${value}" />`
+      )
+      .join("");
+    console.log("done");
+
+    // 👉 Send HTML to auto-redirect user to BFS
+    return res.send(`
         <html>
           <body onload="document.forms[0].submit()">
             <form method="POST" action="https://uatbfssecure.rma.org.bt/BFSSecure/makePayment">
@@ -259,14 +236,13 @@ export const mailer = [
           </body>
         </html>
       `);
-    } catch (err) {
-      console.error(err);
-      res
-        .status(500)
-        .json({ error: "Failed to send screenshot", err: err.message });
-    }
-  },
-];
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ error: "Failed to send screenshot", err: err.message });
+  }
+};
 
 export const getTimeBooked = async (req, res) => {
   const bookings = await Booking.find({
@@ -446,16 +422,58 @@ export const sendFeedback = async (req, res) => {
   return res.status(200).json({ msg: "Feedback submitted" });
 };
 export const bfsSuccess = async (req, res) => {
-  // BFS sends POST with form data — DO NOT JSON parse
-  const rawResponse = req.body;
+  const data = req.body;
 
-  console.log("📥 BFS AC Message Received for success:");
-  console.log(rawResponse);
+  console.log("📥 BFS AC Message Received:");
+  console.log(data);
 
-  // TODO: Validate checksum, verify txn, update DB, etc.
+  // Step 1: Build source string in correct sorted order
+  const orderedKeys = [
+    "bfs_benfId",
+    "bfs_benfTxnTime",
+    "bfs_bfsTxnId",
+    "bfs_bfsTxnTime",
+    "bfs_debitAuthCode",
+    "bfs_debitAuthNo",
+    "bfs_msgType",
+    "bfs_orderNo",
+    "bfs_remitterBankId",
+    "bfs_remitterName",
+    "bfs_txnAmount",
+    "bfs_txnCurrency",
+  ];
 
-  // Redirect user to your frontend route
-  return res.redirect("https://www.thanggo.com/users/booking/success");
+  const sourceString = orderedKeys.map((k) => data[k] ?? "").join("|");
+
+  console.log("🔍 Constructed Source String:");
+  console.log(sourceString);
+
+  // Step 2: Verify checksum
+  const signatureHex = data.bfs_checkSum;
+  const signatureBytes = Buffer.from(signatureHex, "hex");
+
+  const publicKey = fs.readFileSync("bfs.pub", "utf8");
+
+  const isValid = crypto.verify(
+    "RSA-SHA256",
+    Buffer.from(sourceString, "utf8"),
+    publicKey,
+    signatureBytes
+  );
+
+  console.log("🔒 Checksum Valid:", isValid);
+
+  if (!isValid) {
+    console.error("❌ INVALID CHECKSUM — POSSIBLE FRAUD OR TAMPERED RESPONSE");
+    return res.status(400).send("Invalid checksum");
+  }
+
+  await Booking.updateOne(
+    { booking_orderNo: data.bfs_orderNo },
+    { payment_status: "SUCCESS" }
+  );
+
+  return res.redirect("https://www.thanggo.com/users/booking/confirmed");
 };
 export const bfsFailure = async (req, res) => {
   // BFS sends POST with form data — DO NOT JSON parse
