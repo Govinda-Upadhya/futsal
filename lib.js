@@ -96,18 +96,18 @@ export function generateNumericOrderNumber(bookingId) {
 
 export function verifyBFSAC(data, publicKey) {
   const bfsOrder = [
-    "bfs_benfId",
-    "bfs_benfTxnTime",
+    "bfs_msgType",
     "bfs_bfsTxnId",
     "bfs_bfsTxnTime",
+    "bfs_benfTxnTime",
+    "bfs_orderNo",
+    "bfs_benfId",
+    "bfs_txnCurrency",
+    "bfs_txnAmount",
+    "bfs_remitterName",
+    "bfs_remitterBankId",
     "bfs_debitAuthCode",
     "bfs_debitAuthNo",
-    "bfs_msgType",
-    "bfs_orderNo",
-    "bfs_remitterBankId",
-    "bfs_remitterName",
-    "bfs_txnAmount",
-    "bfs_txnCurrency",
   ];
 
   const checksumHex = data.bfs_checkSum;
