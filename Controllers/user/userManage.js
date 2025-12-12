@@ -428,46 +428,20 @@ export const bfsSuccess = async (req, res) => {
   console.log("📥 BFS AC Message Received:");
   console.log(data);
 
-  // Step 1: Build source string in correct sorted order
-  const orderedKeys = [
-    "bfs_benfId",
-    "bfs_benfTxnTime",
-    "bfs_bfsTxnId",
-    "bfs_bfsTxnTime",
-    "bfs_debitAuthCode",
-    "bfs_debitAuthNo",
-    "bfs_msgType",
-    "bfs_orderNo",
-    "bfs_remitterBankId",
-    "bfs_remitterName",
-    "bfs_txnAmount",
-    "bfs_txnCurrency",
-  ];
+  const publicKey = fs.readFileSync("bfs_public.pem", "utf8");
 
-  const sourceString = orderedKeys.map((k) => data[k] ?? "").join("|");
+  const result = verifyBFSAC(data, publicKey);
 
-  console.log("🔍 Constructed Source String:");
-  console.log(sourceString);
+  console.log("🔒 Checksum Result:", result);
 
-  // Step 2: Verify checksum
-  const signatureHex = data.bfs_checkSum;
-  const signatureBytes = Buffer.from(signatureHex, "hex");
-
-  const publicKey = fs.readFileSync("bfs.pub", "utf8");
-
-  const isValid = crypto.verify(
-    "RSA-SHA256",
-    Buffer.from(sourceString, "utf8"),
-    publicKey,
-    signatureBytes
-  );
-
-  console.log("🔒 Checksum Valid:", isValid);
-
-  if (!isValid) {
-    console.error("❌ INVALID CHECKSUM — POSSIBLE FRAUD OR TAMPERED RESPONSE");
+  if (!result.valid) {
+    console.error("❌ INVALID CHECKSUM");
+    console.error("Source String Used:", result.sourceString);
     return res.status(400).send("Invalid checksum");
   }
+
+  // At this point checksum is valid
+  console.log("🔥 VALID CHECKSUM using algorithm:", result.algorithm);
 
   await Booking.updateOne(
     { booking_orderNo: data.bfs_orderNo },
@@ -476,6 +450,7 @@ export const bfsSuccess = async (req, res) => {
 
   return res.redirect("https://www.thanggo.com/users/booking/confirmed");
 };
+
 export const bfsFailure = async (req, res) => {
   // BFS sends POST with form data — DO NOT JSON parse
   const rawResponse = req.body;

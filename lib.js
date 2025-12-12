@@ -93,27 +93,39 @@ export function generateNumericOrderNumber(bookingId) {
  * @param {String} publicKey - BFS PUBLIC KEY in PEM format
  * @returns {Boolean} true if valid, false if tampered
  */
-export function verifyBFSAC(responseQueryString, publicKey) {
-  // Parse & decode URL parameters
-  const params = querystring.decode(responseQueryString);
+import * as crypto from "crypto";
 
-  // Extract checksum, then remove it from the object
-  const checksumHex = params.bfs_checkSum;
-  delete params.bfs_checkSum;
+export function verifyBFSAC(data, publicKey) {
+  const bfsOrder = [
+    "bfs_benfId",
+    "bfs_benfTxnTime",
+    "bfs_bfsTxnId",
+    "bfs_bfsTxnTime",
+    "bfs_debitAuthCode",
+    "bfs_debitAuthNo",
+    "bfs_msgType",
+    "bfs_orderNo",
+    "bfs_remitterBankId",
+    "bfs_remitterName",
+    "bfs_txnAmount",
+    "bfs_txnCurrency",
+  ];
 
-  // Sort keys alphabetically per BFS specification
-  const sortedKeys = Object.keys(params).sort();
+  const checksumHex = data.bfs_checkSum;
+  if (!checksumHex) return false;
 
-  // Create the source string exactly according to BFS rules
-  const sourceString = sortedKeys.map((k) => params[k]).join("|");
+  const signature = Buffer.from(checksumHex, "hex");
 
-  // Convert checksum hex to buffer
-  const signatureBytes = Buffer.from(checksumHex, "hex");
+  const sourceString = bfsOrder.map((k) => data[k] ?? "").join("|");
 
-  // Verify RSA-SHA1 signature using BFS public key
-  const verifier = crypto.createVerify("RSA-SHA1");
-  verifier.update(sourceString, "utf8");
-  const valid = verifier.verify(publicKey, signatureBytes);
+  // Try SHA256 then SHA1
+  for (const alg of ["RSA-SHA256", "RSA-SHA1"]) {
+    const verifier = crypto.createVerify(alg);
+    verifier.update(sourceString, "utf8");
+    if (verifier.verify(publicKey, signature)) {
+      return { valid: true, alg, sourceString };
+    }
+  }
 
-  return valid;
+  return { valid: false, sourceString };
 }
