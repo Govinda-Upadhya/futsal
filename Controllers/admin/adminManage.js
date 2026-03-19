@@ -20,7 +20,7 @@ export const transporterMain = nodemailer.createTransport({
 });
 
 export const adminSignUp = async (req, res) => {
-  const { name, password, profile, email, contact, scanner } = req.body;
+  const { name, password, email, contact } = req.body;
   console.log(password);
   try {
     const userExists = await Admin.find({
@@ -43,14 +43,16 @@ export const adminSignUp = async (req, res) => {
     const newPassword = await bcrypt.hash(password, salt);
     let createUser = await Admin.create({
       name: name,
-      profile: profile,
       password: newPassword,
       email: email,
       contact: contact,
-      scanner: scanner,
     });
     if (createUser) {
-      return res.status(200).send("admin created successfully");
+      return res.status(200).json({
+        msg: "admin created successfully",
+        user: createUser,
+        type: "admin",
+      });
     }
     return res.status(400).send("Admin couldnt be created. Please try again");
   } catch (error) {
@@ -79,49 +81,48 @@ export const updateAdmin = async (req, res) => {
       name: newInfo.name,
       scanner: newInfo.scanner,
     },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   );
   return res.status(200).json({ msg: "user Updated" });
 };
-export const getAdmin = async (req, res) => {
-  const admin = req.admin;
-  const info = await Admin.findOne({ email: admin.email });
-
-  return res.json(info);
-};
 export const adminSignIn = async (req, res) => {
+  console.log(req);
   const { email, password } = req.body;
-
   try {
-    const userExists = await Admin.find({
-      email: email,
-    });
-
+    const userExists = await Admin.findOne({ email: email });
     if (userExists.length == 0) {
       return res.status(400).send("user doesn't exists. Please signup.");
     }
-
     const passwordVerified = await bcrypt.compare(
       password,
-      userExists[0].password
+      userExists.password,
     );
     if (!passwordVerified) {
       return res.status(400).send("Password is incorrect");
     }
-    const token = jwt.sign({ email: email }, JWT_SECRET, {
+    const token = jwt.sign({ email: email, type: "admin" }, JWT_SECRET, {
       expiresIn: "7d",
     });
-
     return res
       .cookie("token", token, {
         sameSite: "lax",
         httpOnly: true,
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
-      .json({ message: "Login successful", token: token });
+      .json({
+        message: "Login successful",
+        token: token,
+        user: { email: userExists.email, name: userExists.name, type: "admin" },
+      });
   } catch (error) {
     console.log("error", error);
   }
+};
+export const getAdmin = async (req, res) => {
+  const admin = req.admin;
+  const info = await Admin.findOne({ email: admin.email });
+
+  return res.json(info);
 };
 
 export const isLoggedIn = async (req, res) => {
@@ -346,16 +347,16 @@ export const overall = async (req, res) => {
   const bookingData = await BookingData.find({ adminId: adminEmail });
   const totalConfirmedBookings = bookingData.reduce(
     (count, booking) => count + (booking.status === "CONFIRMED" ? 1 : 0),
-    0
+    0,
   );
   const totalPendingBookings = bookingData.reduce(
     (count, booking) => count + (booking.status === "PENDING" ? 1 : 0),
-    0
+    0,
   );
   const totalRevenue = bookingData.reduce(
     (amount, booking) =>
       amount + (booking.status === "CONFIRMED" ? booking.amount : 0),
-    0
+    0,
   );
 
   return res.json({

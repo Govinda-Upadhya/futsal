@@ -18,19 +18,16 @@ import {
 } from "../../lib.js";
 import Redis from "ioredis";
 
-const redis = new Redis({
-  host: "127.0.0.1", // or "localhost"
-  port: 6379,
-});
 const upload = multer({ storage: multer.memoryStorage() });
 export const fetchGrounds = async (req, res) => {
   const grounds = await Ground.find({});
-  if (grounds.length == 0) {
-    return res.status(404).send("No grounds available");
-  }
 
-  return res.json({ ground: grounds });
+  return res.json({
+    grounds, // [] if empty
+    count: grounds.length,
+  });
 };
+
 export const viewGrounduser = async (req, res) => {
   const id = req.params.id;
 

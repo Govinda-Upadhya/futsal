@@ -8,13 +8,8 @@ const timeRangeSchema = new mongoose.Schema(
       required: true,
       match: /^([0-1]\d|2[0-3]):([0-5]\d)$/,
     },
-    end: {
-      type: String,
-      required: true,
-      match: /^([0-1]\d|2[0-3]):([0-5]\d)$/,
-    },
   },
-  { _id: false }
+  { _id: false },
 );
 const superAdminSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -26,9 +21,9 @@ const adminSchema = new mongoose.Schema({
     type: String,
     required: [true, "Name is required"],
   },
-  scanner: {
-    type: String,
-  },
+  // scanner: {
+  //   type: String,
+  // }
   email: {
     type: String,
     required: [true, "Email is required"],
@@ -61,7 +56,7 @@ const groundSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["Football", "Cricket", "Basketball", "Tennis", "Badminton"],
+      enum: ["football", "cricket", "basketball", "tennis", "badminton"],
       required: [true, "Ground type is required"],
     },
     location: {
@@ -107,7 +102,7 @@ const groundSchema = new mongoose.Schema(
       default: "",
     },
     availability: {
-      type: [timeRangeSchema], // ✅ keeping time ranges
+      type: [String], // ✅ keeping time ranges
       default: [],
     },
     admin: {
@@ -116,7 +111,7 @@ const groundSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 const bookingSchema = new mongoose.Schema(
   {
@@ -152,7 +147,7 @@ const bookingSchema = new mongoose.Schema(
       index: { expires: 0 }, // 🔑 tells MongoDB to expire at this time
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const challengeSchema = new mongoose.Schema({

@@ -33,33 +33,33 @@ export const createGround = async (req, res) => {
     if (groundExists.length != 0) {
       return res.send("Ground already exists");
     }
-    for (const time of availability) {
-      if (!time.start || !time.end) {
-        return res.status(400).send("Start and end times are required");
-      }
+    // for (const time of availability) {
+    //   if (!time.start || !time.end) {
+    //     return res.status(400).send("Start and end times are required");
+    //   }
 
-      const start = time.start.trim();
-      const end = time.end.trim();
+    //   const start = time.start.trim();
+    //   const end = time.end.trim();
 
-      if (toMinutes(start) > toMinutes(end)) {
-        for (const photo of image) {
-          const url = new URL(photo);
-          const key = url.pathname.substring(1);
+    //   if (toMinutes(start) > toMinutes(end)) {
+    //     for (const photo of image) {
+    //       const url = new URL(photo);
+    //       const key = url.pathname.substring(1);
 
-          const params = {
-            Bucket: "futsal-pics",
-            Key: key,
-          };
-          try {
-            const command = new DeleteObjectCommand(params);
-            const response = await s3.send(command);
-          } catch (err) {
-            console.error("Error deleting object:", err);
-          }
-        }
-        return res.status(400).send(`Invalid time range: ${start} - ${end}`);
-      }
-    }
+    //       const params = {
+    //         Bucket: "futsal-pics",
+    //         Key: key,
+    //       };
+    //       try {
+    //         const command = new DeleteObjectCommand(params);
+    //         const response = await s3.send(command);
+    //       } catch (err) {
+    //         console.error("Error deleting object:", err);
+    //       }
+    //     }
+    //     return res.status(400).send(`Invalid time range: ${start} - ${end}`);
+    //   }
+    // }
     const admin = await Admin.findOne({ email: req.admin.email });
     const createGround = await Ground.create({
       name: name,
@@ -96,12 +96,14 @@ export const deleteGround = async (req, res) => {
     }
     const deleted = await Ground.findByIdAndDelete(groundId);
     if (!deleted) {
-      return res.send("Ground couldnt be deleted, try again letter");
+      return res
+        .status(400)
+        .json({ msg: "Ground couldnt be deleted, try again letter" });
     }
-    return res.send("Ground removed successfully");
+    return res.json({ msg: "Ground removed successfully" });
   } catch (error) {
     console.log(error);
-    return res.send("some error occured");
+    return res.status(500).json({ msg: "some error occured" });
   }
 };
 
@@ -126,99 +128,153 @@ export const updateGround = async (req, res) => {
 
   try {
     const groundExists = await Ground.findById(groundId);
+
     if (!groundExists) {
-      const res = await axios.delete(base_delete_admin, {
-        data: { url: newImageUrls },
-      });
-
-      return res.send("the ground doesnt exists");
+      return res.status(404).json({ msg: "Ground does not exist" });
     }
-    for (const time of availability) {
-      if (!time.start || !time.end) {
-        console.log("time wrong");
-        const res = await axios.delete(base_delete_admin, {
-          data: {
-            url: newImageUrls,
-          },
-        });
 
-        return res.status(400).send("Start and end times are required");
-      }
-
-      const start = time.start.trim();
-      const end = time.end.trim();
-
-      if (toMinutes(start) > toMinutes(end)) {
-        const res = await axios.delete(base_delete_admin, {
-          data: { url: newImageUrls },
-        });
-
-        return res.status(400).send(`Invalid time range: ${start} - ${end}`);
-      }
-    }
-    const newImages = [];
-    if (removedImages.length != 0) {
-      console.log("removed image is there");
-      const res = await axios.delete(base_delete_admin, {
-        data: { url: removedImages },
-      });
-
-      for (const image of images) {
-        for (const photo of removedImages) {
-          if (image != photo) {
-            newImages.push(image);
-          }
-        }
-      }
-    }
-    let updatedGround = null;
-    console.log(newImages);
-    if (newImages.length != 0) {
-      console.log("new image is there");
-      updatedGround = await Ground.findByIdAndUpdate(
-        groundId,
-        {
-          name,
-          image: newImages,
-          location,
+    const result = await Ground.updateOne(
+      { _id: groundExists._id },
+      {
+        $set: {
           pricePerHour,
           nightprice,
-          availability,
-          description,
-          capacity,
-          features,
-          nightime,
           weekendNightPrice,
           weekendPrice,
-        },
-        { new: true, runValidators: true }
-      );
-    } else {
-      console.log("no new image si there");
-      updatedGround = await Ground.findByIdAndUpdate(
-        groundId,
-        {
+          image: images, // ✅ fixed
+          features,
           name,
-          image: images,
           location,
-          availability,
-          pricePerHour,
-          nightprice,
-          description,
           capacity,
-          features,
-          nightime,
-          weekendPrice,
-          weekendNightPrice,
+          availability,
+          description,
         },
-        { new: true, runValidators: true }
-      );
+      },
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(400).json({ msg: "Couldn't update the ground" });
     }
 
-    if (!updatedGround) {
-      return res.send("Ground couldnt be updated, try again letter");
-    }
-    return res.send("Ground updated successfully");
+    return res.json({ msg: "done" });
+
+    // const groundId = req.params.id;
+
+    // try {
+    //   const groundExists = await Ground.findById(groundId);
+    //   // if (!groundExists) {
+    //   //   const result = await axios.delete(base_delete_admin, {
+    //   //     data: { url: newImageUrls },
+    //   //   });
+
+    //   //   return res.send("the ground doesnt exists");
+    //   // }
+    //   const result = await Ground.updateOne(
+    //     { _id: groundExists._id },
+    //     {
+    //       pricePerHour,
+    //       nightprice,
+    //       weekendNightPrice,
+    //       weekendPrice,
+    //       image: images,
+    //       features,
+    //       name,
+    //       location,
+    //       capacity,
+    //       availability,
+    //       description,
+    //     },
+    //   );
+    //   if (!result) {
+    //     return res.status(400).json({ msg: "Couldn't update the ground" });
+    //   }
+    //   return res.json({ msg: "done" });
+    // for (const time of availability) {
+    //   if (!time.start || !time.end) {
+    //     console.log("time wrong");
+    //     const res = await axios.delete(base_delete_admin, {
+    //       data: {
+    //         url: newImageUrls,
+    //       },
+    //     });
+
+    //     return res.status(400).send("Start and end times are required");
+    //   }
+
+    //   const start = time.start.trim();
+    //   const end = time.end.trim();
+
+    //   if (toMinutes(start) > toMinutes(end)) {
+    //     const res = await axios.delete(base_delete_admin, {
+    //       data: { url: newImageUrls },
+    //     });
+
+    //     return res.status(400).send(`Invalid time range: ${start} - ${end}`);
+    //   }
+    // }
+    // const newImages = [];
+    // if (removedImages.length != 0) {
+    //   console.log("removed image is there");
+    //   const res = await axios.delete(base_delete_admin, {
+    //     data: { url: removedImages },
+    //   });
+
+    //   for (const image of images) {
+    //     for (const photo of removedImages) {
+    //       if (image != photo) {
+    //         newImages.push(image);
+    //       }
+    //     }
+    //   }
+    // }
+    // let updatedGround = null;
+
+    // if (newImages.length != 0) {
+    //   console.log("new image is there");
+    //   updatedGround = await Ground.findByIdAndUpdate(
+    //     groundId,
+    //     {
+    //       name,
+    //       image: newImages,
+    //       location,
+    //       pricePerHour,
+    //       nightprice,
+    //       availability,
+    //       description,
+    //       capacity,
+    //       features,
+    //       nightime,
+    //       weekendNightPrice,
+    //       weekendPrice,
+    //     },
+    //     { new: true, runValidators: true },
+    //   );
+    // } else {
+    //   console.log("no new image si there");
+    //   updatedGround = await Ground.findByIdAndUpdate(
+    //     groundId,
+    //     {
+    //       name,
+    //       image: images,
+    //       location,
+    //       availability,
+    //       pricePerHour,
+    //       nightprice,
+    //       description,
+    //       capacity,
+    //       features,
+    //       nightime,
+    //       weekendPrice,
+    //       weekendNightPrice,
+    //     },
+    //     { new: true, runValidators: true },
+    //   );
+    // }
+
+    // if (!updatedGround) {
+    //   return res.send("Ground couldnt be updated, try again letter");
+    // }
+    // return res.send("Ground updated successfully");
   } catch (error) {
     console.log(error);
     return res.json({ msg: "error", error });
@@ -231,7 +287,7 @@ export const viewGrounds = async (req, res) => {
     admin: admin._id,
   });
   if (grounds.length == 0) {
-    return res.status(400).json({ msg: "no grounds" });
+    return res.status(400).json({ msg: "no grounds", gorunds: [] });
   }
   return res.status(200).json({ grounds });
 };

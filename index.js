@@ -26,10 +26,11 @@ app.use(
   cors({
     origin: allowedOrigin,
     credentials: true,
-  })
+  }),
 );
 
 app.use(cookieParser());
+
 app.use("/users", userRoutes);
 app.use("/admin", adminRoutes);
 app.use("/superAdmin", superAdminRoutes);
@@ -38,7 +39,7 @@ async function main() {
   try {
     await mongoose.connect(db_url);
 
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
       console.log("listening...", PORT);
     });
   } catch (error) {
