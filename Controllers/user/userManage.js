@@ -36,7 +36,7 @@ export const viewGrounduser = async (req, res) => {
   if (ground.length == 0) {
     return res.send("no such ground exists");
   }
-
+  console.log("testing..");
   return res.send(ground);
 };
 
@@ -139,7 +139,7 @@ export const verifyChallengesOtp = async (req, res) => {
     const challenge = await Challenges.findByIdAndUpdate(
       id,
       { valid: true },
-      { new: true } // returns the updated document
+      { new: true }, // returns the updated document
     );
 
     await redis.del(`otp:${email}`); // remove OTP after verification
@@ -200,7 +200,7 @@ export const mailer = async (req, res) => {
     armessage.bfs_checkSum = checksum;
     await Booking.updateOne(
       { _id: booking._id },
-      { booking_orderNo: order_number }
+      { booking_orderNo: order_number },
     );
     const ground = await Ground.findById(groundId).populate("admin", "_id");
     const admin = await Admin.findById(ground.admin._id);
@@ -219,7 +219,7 @@ export const mailer = async (req, res) => {
     let formInputs = Object.entries(armessage)
       .map(
         ([key, value]) =>
-          `<input type="hidden" name="${key}" value="${value}" />`
+          `<input type="hidden" name="${key}" value="${value}" />`,
       )
       .join("");
     console.log("done");
@@ -332,7 +332,7 @@ export const seeDate = async (req, res) => {
     }
 
     const bookings = await Booking.find({ date: searchDate }).populate(
-      "ground"
+      "ground",
     );
     console.log("bookings:", bookings);
 
@@ -342,14 +342,14 @@ export const seeDate = async (req, res) => {
 
     for (const ground of allGrounds) {
       const groundBookings = bookings.filter(
-        (b) => b.ground._id.toString() === ground._id.toString()
+        (b) => b.ground._id.toString() === ground._id.toString(),
       );
 
       const bookedSlots = groundBookings.flatMap((b) => b.time);
 
       const freeSlots = ground.availability.filter((slot) => {
         return !bookedSlots.some(
-          (booked) => booked.start === slot.start && booked.end === slot.end
+          (booked) => booked.start === slot.start && booked.end === slot.end,
         );
       });
 
@@ -427,7 +427,7 @@ export const bfsSuccess = async (req, res) => {
 
   await Booking.updateOne(
     { booking_orderNo: data.bfs_orderNo },
-    { payment_status: "SUCCESS" }
+    { payment_status: "SUCCESS" },
   );
 
   return res.redirect("https://www.thanggo.com/users/booking/confirmed");
